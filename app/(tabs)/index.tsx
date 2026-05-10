@@ -1,4 +1,5 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import {
 	ImageBackground,
 	Pressable,
@@ -11,7 +12,6 @@ import {
 import Chessboard from "react-native-chessboard";
 import tema from "@/src/constantes/tema";
 import estilos from "../estilos";
-import { router } from "expo-router";
 
 const estilo = StyleSheet.create({
 	banner: {
@@ -61,6 +61,22 @@ const estilo = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "500",
 	},
+
+	rating: {
+		color: tema.verde,
+		fontSize: 56,
+		letterSpacing: -1,
+	},
+	ratingTexto: {
+		color: tema.textoPrimario,
+		fontSize: 16,
+		letterSpacing: 2,
+		fontWeight: "100",
+	},
+	ratingMelhoria: {
+		fontSize: 14,
+		color: tema.verde,
+	},
 });
 
 export default function TelaInicio() {
@@ -93,22 +109,34 @@ export default function TelaInicio() {
 			<View style={estilo.cartao}>
 				<Text style={estilo.ratingTexto}>Rating atual</Text>
 				<Text style={estilo.rating}>2148</Text>
-				<View>
-					<MaterialCommunityIcons></MaterialCommunityIcons>
+				<View
+					style={{
+						flexDirection: "row",
+						justifyContent: "center",
+						gap: 8,
+						alignItems: "center",
+					}}
+				>
+					<MaterialCommunityIcons
+						name="trending-up"
+						size={32}
+						color={tema.verde}
+					></MaterialCommunityIcons>
 					<Text style={estilo.ratingMelhoria}>+12 desde a semana passada</Text>
 				</View>
 			</View>
 
 			<View style={estilo.cartao}>
 				<View>
-					<Text style={estilo.bannerTitulo}>Quebra-cabeça Diário</Text>
+					<Text style={estilo.bannerTitulo}>Quebra-cabeça diário</Text>
 					<Text style={estilo.bannerSubtitulo}>Mate em 3</Text>
 				</View>
 				<View>
 					<Chessboard
-						boardSize={width - 64}
+						boardSize={width - 128}
+						gestureEnabled={false}
 						colors={{
-							black: tema.bg,
+							black: tema.surfaceAlt,
 							white: tema.textoPrimario,
 							lastMoveHighlight: "rgba(74, 222, 128, 0.3)",
 						}}
