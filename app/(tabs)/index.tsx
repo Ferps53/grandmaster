@@ -10,7 +10,9 @@ import {
 	View,
 } from "react-native";
 import Chessboard from "react-native-chessboard";
+import PartidasAnteriores from "@/src/componentes/PartidasAnteriores";
 import tema from "@/src/constantes/tema";
+import type { PropsParidasAnteriores } from "@/src/model/PartidasAnteriores";
 import estilos from "../estilos";
 
 const estilo = StyleSheet.create({
@@ -52,7 +54,7 @@ const estilo = StyleSheet.create({
 	bannerTitulo: {
 		color: tema.textoPrimario,
 		fontSize: 36,
-		marginBottom: 20,
+		marginBottom: 32,
 		fontWeight: "700",
 	},
 
@@ -64,8 +66,9 @@ const estilo = StyleSheet.create({
 
 	rating: {
 		color: tema.verde,
-		fontSize: 56,
-		letterSpacing: -1,
+		padding: 4,
+		fontSize: 72,
+		letterSpacing: 2,
 	},
 	ratingTexto: {
 		color: tema.textoPrimario,
@@ -78,6 +81,13 @@ const estilo = StyleSheet.create({
 		color: tema.verde,
 	},
 });
+
+const listPartidasAnteriores: PropsParidasAnteriores[] = [
+	{ nome: "Magnus Carlsen", elo: 2840, status: "V", ativo: true },
+	{ nome: "Levy Rozman", elo: 2318, status: "D", ativo: false },
+	{ nome: "Felipe Brostolin Ribeiro", elo: 700, status: "E", ativo: false },
+	{ nome: "Walter White", elo: 3600, status: "D", ativo: true },
+];
 
 export default function TelaInicio() {
 	const { width } = useWindowDimensions();
@@ -126,12 +136,20 @@ export default function TelaInicio() {
 				</View>
 			</View>
 
-			<View style={estilo.cartao}>
-				<View>
-					<Text style={estilo.bannerTitulo}>Quebra-cabeça diário</Text>
-					<Text style={estilo.bannerSubtitulo}>Mate em 3</Text>
+			<View style={[estilo.cartao, { alignItems: "flex-start" }]}>
+				<View
+					style={{
+						alignItems: "flex-start",
+					}}
+				>
+					<Text style={[estilo.bannerTitulo, { marginLeft: 32 }]}>
+						Quebra-cabeça diário
+					</Text>
+					<Text style={[estilo.bannerSubtitulo, { marginLeft: 32 }]}>
+						Mate em 3
+					</Text>
 				</View>
-				<View>
+				<View style={{ alignSelf: "center" }}>
 					<Chessboard
 						boardSize={width - 128}
 						gestureEnabled={false}
@@ -143,6 +161,19 @@ export default function TelaInicio() {
 					/>
 				</View>
 			</View>
+
+			<Text style={[estilo.bannerTitulo, { marginLeft: 16, marginBottom: 12 }]}>
+				Partidas anteriores
+			</Text>
+			{listPartidasAnteriores.map((partida) => (
+				<PartidasAnteriores
+					key={partida.nome}
+					nome={partida.nome}
+					elo={partida.elo}
+					status={partida.status}
+					ativo={partida.ativo}
+				/>
+			))}
 		</ScrollView>
 	);
 }
