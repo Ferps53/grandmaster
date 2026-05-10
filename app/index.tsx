@@ -33,7 +33,7 @@ export default function TelaLogin() {
 					<View style={estilos.cabecalho}>
 						<View style={estilos.iconeWrapper}>
 							<MaterialCommunityIcons
-								name="chess-pawn"
+								name="chess-bishop"
 								size={36}
 								color={tema.verde}
 							/>
@@ -131,7 +131,7 @@ export default function TelaLogin() {
 					<View style={estilos.rodape}>
 						<Text style={estilos.textoRodape}>Novo por aqui? </Text>
 						<Link href="/register" asChild>
-							<Pressable>
+							<Pressable hitSlop={16}>
 								<Text style={estilos.linkRodape}>Crie sua conta</Text>
 							</Pressable>
 						</Link>
