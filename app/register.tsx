@@ -26,7 +26,7 @@ export default function TelaLogin() {
 	}
 
 	return (
-		<SafeAreaView style={estilos.root} edges={["bottom"]}>
+		<SafeAreaView style={estilos.root} edges={["bottom", "top"]}>
 			<KeyboardAvoidingView
 				style={estilos.root}
 				behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -97,7 +97,7 @@ export default function TelaLogin() {
 								/>
 								<TextInput
 									style={estilos.input}
-									placeholder="E-mail ou Usuário"
+									placeholder="E-mail"
 									placeholderTextColor={tema.textoMudo}
 									value={identificador}
 									onChangeText={setIdentificador}
@@ -145,63 +145,61 @@ export default function TelaLogin() {
 									/>
 								</Pressable>
 							</View>
-							<View style={estilos.grupoCampo}>
-								<Text style={estilos.labelCampo}>Confirme sua senha</Text>
-								<View
-									style={[
-										estilos.inputWrapper,
-										campoFocado === "confirmarSenha" &&
-											estilos.inputWrapperFocado,
-									]}
+						</View>
+
+						<View style={estilos.grupoCampo}>
+							<Text style={estilos.labelCampo}>Confirme sua senha</Text>
+							<View
+								style={[
+									estilos.inputWrapper,
+									campoFocado === "confirmarSenha" &&
+										estilos.inputWrapperFocado,
+								]}
+							>
+								<MaterialCommunityIcons
+									name="lock-outline"
+									size={20}
+									color={
+										campoFocado === "confirmarSenha"
+											? tema.verde
+											: tema.textoSecundario
+									}
+								/>
+								<TextInput
+									style={estilos.input}
+									placeholder="••••••••••"
+									placeholderTextColor={tema.textoMudo}
+									value={confirmarSenha}
+									onChangeText={setConfirmarSenha}
+									onFocus={() => setCampoFocado("confirmarSenha")}
+									onBlur={() => setCampoFocado(null)}
+									secureTextEntry={!mostrarConfirmarSenha}
+								/>
+								<Pressable
+									onPress={() => setMostrarConfirmarSenha((v) => !v)}
+									hitSlop={8}
 								>
 									<MaterialCommunityIcons
-										name="lock-outline"
-										size={20}
-										color={
-											campoFocado === "confirmarSenha"
-												? tema.verde
-												: tema.textoSecundario
+										name={
+											mostrarConfirmarSenha ? "eye-off-outline" : "eye-outline"
 										}
+										size={20}
+										color={tema.textoSecundario}
 									/>
-									<TextInput
-										style={estilos.input}
-										placeholder="••••••••••"
-										placeholderTextColor={tema.textoMudo}
-										value={confirmarSenha}
-										onChangeText={setConfirmarSenha}
-										onFocus={() => setCampoFocado("confirmarSenha")}
-										onBlur={() => setCampoFocado(null)}
-										secureTextEntry={!mostrarConfirmarSenha}
-									/>
-									<Pressable
-										onPress={() => setMostrarConfirmarSenha((v) => !v)}
-										hitSlop={8}
-									>
-										<MaterialCommunityIcons
-											name={
-												mostrarConfirmarSenha
-													? "eye-off-outline"
-													: "eye-outline"
-											}
-											size={20}
-											color={tema.textoSecundario}
-										/>
-									</Pressable>
-								</View>
+								</Pressable>
 							</View>
-
-							<Pressable
-								style={({ pressed }) => [
-									estilos.botaoEntrar,
-									pressed && estilos.botaoEntrarPressionado,
-								]}
-								onPress={handleEntrar}
-							>
-								<Text style={estilos.textoBotaoEntrar}>
-									Cadastrar uma nova conta
-								</Text>
-							</Pressable>
 						</View>
+						<Pressable
+							style={({ pressed }) => [
+								estilos.botaoEntrar,
+								pressed && estilos.botaoEntrarPressionado,
+							]}
+							onPress={handleEntrar}
+						>
+							<Text style={estilos.textoBotaoEntrar}>
+								Cadastrar uma nova conta
+							</Text>
+						</Pressable>
 					</View>
 
 					<View style={estilos.rodape}>

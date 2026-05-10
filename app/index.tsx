@@ -24,7 +24,7 @@ export default function TelaLogin() {
 	}
 
 	return (
-		<SafeAreaView style={estilos.root} edges={["bottom"]}>
+		<SafeAreaView style={estilos.root} edges={["bottom", "top"]}>
 			<KeyboardAvoidingView
 				style={estilos.root}
 				behavior={Platform.OS === "ios" ? "padding" : "height"}
