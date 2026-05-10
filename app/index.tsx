@@ -1,7 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
 import {
 	KeyboardAvoidingView,
 	Platform,
@@ -11,148 +10,130 @@ import {
 	TextInput,
 	View,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import tema from "../src/constantes/tema";
 
-const COLORS = {
-	bg: "#0d1117",
-	surface: "#161b22",
-	surfaceAlt: "#1c2330",
-	border: "#21262d",
-	green: "#4ade80",
-	textPrimary: "#f0f6fc",
-	textSecondary: "#8b949e",
-	textMuted: "#484f58",
-};
+export default function TelaLogin() {
+	const [identificador, setIdentificador] = useState("");
+	const [senha, setSenha] = useState("");
+	const [mostrarSenha, setMostrarSenha] = useState(false);
+	const [campoFocado, setCampoFocado] = useState<string | null>(null);
 
-export default function LoginScreen() {
-	const [identifier, setIdentifier] = useState("");
-	const [password, setPassword] = useState("");
-	const [showPassword, setShowPassword] = useState(false);
-	const [focusedField, setFocusedField] = useState<string | null>(null);
-
-	function handleLogin() {
-		// TODO: hook up auth
+	function handleEntrar() {
 		router.replace("/(tabs)");
 	}
 
 	return (
-		<SafeAreaView style={styles.root} edges={["bottom"]}>
+		<SafeAreaView style={estilos.root} edges={["bottom"]}>
 			<KeyboardAvoidingView
-				style={styles.root}
+				style={estilos.root}
 				behavior={Platform.OS === "ios" ? "padding" : "height"}
 			>
-				<View style={styles.content}>
-					{/* Header */}
-					<View style={styles.header}>
-						<View style={styles.iconWrapper}>
+				<View style={estilos.conteudo}>
+					{/* Cabeçalho */}
+					<View style={estilos.cabecalho}>
+						<View style={estilos.iconeWrapper}>
 							<MaterialCommunityIcons
 								name="chess-pawn"
 								size={36}
-								color={COLORS.green}
+								color={tema.verde}
 							/>
 						</View>
-						<Text style={styles.title}>Grandmaster</Text>
-						<Text style={styles.subtitle}>THE INTELLECTUAL SANCTUARY</Text>
+						<Text style={estilos.titulo}>Grandmaster</Text>
+						<Text style={estilos.subtitulo}>THE INTELLECTUAL SANCTUARY</Text>
 					</View>
 
-					{/* Card */}
-					<View style={styles.card}>
-						<View style={styles.cardHeading}>
-							<Text style={styles.cardTitle}>Bem-vindo de Volta</Text>
-							<Text style={styles.cardSubtitle}>
-								Por favor, insira suas credenciais táticas.
-							</Text>
+					<View style={estilos.cartao}>
+						<View style={estilos.cabecalhoCartao}>
+							<Text style={estilos.tituloCartao}>Bem-vindo de Volta</Text>
 						</View>
 
-						{/* Email field */}
-						<View style={styles.fieldGroup}>
-							<Text style={styles.fieldLabel}>ID DE GRANDE MESTRE</Text>
+						<View style={estilos.grupoCampo}>
+							<Text style={estilos.labelCampo}>E-mail</Text>
 							<View
 								style={[
-									styles.inputWrapper,
-									focusedField === "id" && styles.inputWrapperFocused,
+									estilos.inputWrapper,
+									campoFocado === "id" && estilos.inputWrapperFocado,
 								]}
 							>
 								<MaterialCommunityIcons
 									name="at"
 									size={20}
 									color={
-										focusedField === "id" ? COLORS.green : COLORS.textSecondary
+										campoFocado === "id" ? tema.verde : tema.textoSecundario
 									}
 								/>
 								<TextInput
-									style={styles.input}
+									style={estilos.input}
 									placeholder="E-mail ou Usuário"
-									placeholderTextColor={COLORS.textMuted}
-									value={identifier}
-									onChangeText={setIdentifier}
-									onFocus={() => setFocusedField("id")}
-									onBlur={() => setFocusedField(null)}
+									placeholderTextColor={tema.textoMudo}
+									value={identificador}
+									onChangeText={setIdentificador}
+									onFocus={() => setCampoFocado("id")}
+									onBlur={() => setCampoFocado(null)}
 									autoCapitalize="none"
 									keyboardType="email-address"
 								/>
 							</View>
 						</View>
 
-						{/* Password field */}
-						<View style={styles.fieldGroup}>
-							<Text style={styles.fieldLabel}>CHAVE SECRETA</Text>
+						<View style={estilos.grupoCampo}>
+							<Text style={estilos.labelCampo}>Senha</Text>
 							<View
 								style={[
-									styles.inputWrapper,
-									focusedField === "pw" && styles.inputWrapperFocused,
+									estilos.inputWrapper,
+									campoFocado === "senha" && estilos.inputWrapperFocado,
 								]}
 							>
 								<MaterialCommunityIcons
 									name="lock-outline"
 									size={20}
 									color={
-										focusedField === "pw" ? COLORS.green : COLORS.textSecondary
+										campoFocado === "senha" ? tema.verde : tema.textoSecundario
 									}
 								/>
 								<TextInput
-									style={styles.input}
+									style={estilos.input}
 									placeholder="••••••••••"
-									placeholderTextColor={COLORS.textMuted}
-									value={password}
-									onChangeText={setPassword}
-									onFocus={() => setFocusedField("pw")}
-									onBlur={() => setFocusedField(null)}
-									secureTextEntry={!showPassword}
+									placeholderTextColor={tema.textoMudo}
+									value={senha}
+									onChangeText={setSenha}
+									onFocus={() => setCampoFocado("senha")}
+									onBlur={() => setCampoFocado(null)}
+									secureTextEntry={!mostrarSenha}
 								/>
 								<Pressable
-									onPress={() => setShowPassword((v) => !v)}
+									onPress={() => setMostrarSenha((v) => !v)}
 									hitSlop={8}
 								>
 									<MaterialCommunityIcons
-										name={showPassword ? "eye-off-outline" : "eye-outline"}
+										name={mostrarSenha ? "eye-off-outline" : "eye-outline"}
 										size={20}
-										color={COLORS.textSecondary}
+										color={tema.textoSecundario}
 									/>
 								</Pressable>
 							</View>
-							<Pressable style={styles.forgotBtn}>
-								<Text style={styles.forgotLink}>Esqueceu a senha?</Text>
+							<Pressable style={estilos.botaoEsqueceu}>
+								<Text style={estilos.linkEsqueceu}>Esqueceu a senha?</Text>
 							</Pressable>
 						</View>
 
-						{/* Login button */}
 						<Pressable
 							style={({ pressed }) => [
-								styles.loginBtn,
-								pressed && styles.loginBtnPressed,
+								estilos.botaoEntrar,
+								pressed && estilos.botaoEntrarPressionado,
 							]}
-							onPress={handleLogin}
+							onPress={handleEntrar}
 						>
-							<Text style={styles.loginBtnText}>Entrar</Text>
+							<Text style={estilos.textoBotaoEntrar}>Entrar</Text>
 						</Pressable>
 					</View>
 
-					{/* Footer */}
-					<View style={styles.footer}>
-						<Text style={styles.footerText}>Novo por aqui? </Text>
+					<View style={estilos.rodape}>
+						<Text style={estilos.textoRodape}>Novo por aqui?</Text>
 						<Link href="/register" asChild>
 							<Pressable>
-								<Text style={styles.footerLink}>Criar conta</Text>
+								<Text style={estilos.linkRodape}>Crie sua conta</Text>
 							</Pressable>
 						</Link>
 					</View>
@@ -162,139 +143,134 @@ export default function LoginScreen() {
 	);
 }
 
-const styles = StyleSheet.create({
+const estilos = StyleSheet.create({
 	root: {
 		flex: 1,
-		backgroundColor: COLORS.bg,
+		backgroundColor: tema.bg,
 	},
-	content: {
+	conteudo: {
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 		paddingHorizontal: 24,
 		gap: 24,
 	},
-
-	// Header
-	header: {
+	// Cabeçalho
+	cabecalho: {
 		alignItems: "center",
 		gap: 8,
 	},
-	iconWrapper: {
+	iconeWrapper: {
 		width: 72,
 		height: 72,
 		borderRadius: 16,
-		backgroundColor: COLORS.surface,
+		backgroundColor: tema.surface,
 		alignItems: "center",
 		justifyContent: "center",
 		borderWidth: 1,
-		borderColor: COLORS.border,
+		borderColor: tema.borda,
 		marginBottom: 8,
 	},
-	title: {
+	titulo: {
 		fontSize: 40,
 		fontStyle: "italic",
 		fontWeight: "700",
-		color: COLORS.green,
+		color: tema.verde,
 		letterSpacing: -1,
 	},
-	subtitle: {
+	subtitulo: {
 		fontSize: 11,
-		color: COLORS.textSecondary,
+		color: tema.textoSecundario,
 		letterSpacing: 3,
 	},
-
-	// Card
-	card: {
+	// Cartão
+	cartao: {
 		width: "100%",
-		backgroundColor: COLORS.surface,
+		backgroundColor: tema.surface,
 		borderRadius: 20,
 		padding: 24,
 		borderWidth: 1,
-		borderColor: COLORS.border,
+		borderColor: tema.borda,
 		gap: 20,
 	},
-	cardHeading: {
+	cabecalhoCartao: {
 		gap: 4,
 	},
-	cardTitle: {
+	tituloCartao: {
 		fontSize: 26,
 		fontWeight: "700",
-		color: COLORS.textPrimary,
+		color: tema.textoPrimario,
 	},
-	cardSubtitle: {
+	subtituloCartao: {
 		fontSize: 14,
-		color: COLORS.textSecondary,
+		color: tema.textoSecundario,
 		lineHeight: 20,
 	},
-
-	// Fields
-	fieldGroup: {
+	// Campos
+	grupoCampo: {
 		gap: 8,
 	},
-	fieldLabel: {
+	labelCampo: {
 		fontSize: 11,
 		fontWeight: "600",
-		color: COLORS.textSecondary,
+		color: tema.textoSecundario,
 		letterSpacing: 1.5,
 	},
 	inputWrapper: {
 		flexDirection: "row",
 		alignItems: "center",
-		backgroundColor: COLORS.surfaceAlt,
+		backgroundColor: tema.surfaceAlt,
 		borderRadius: 10,
 		borderWidth: 1,
-		borderColor: COLORS.border,
+		borderColor: tema.borda,
 		paddingHorizontal: 14,
 		height: 52,
 		gap: 10,
 	},
-	inputWrapperFocused: {
-		borderColor: COLORS.green,
+	inputWrapperFocado: {
+		borderColor: tema.verde,
 	},
 	input: {
 		flex: 1,
-		color: COLORS.textPrimary,
+		color: tema.textoPrimario,
 		fontSize: 15,
 	},
-	forgotBtn: {
+	botaoEsqueceu: {
 		alignSelf: "flex-end",
 	},
-	forgotLink: {
+	linkEsqueceu: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: COLORS.green,
+		color: tema.verde,
 	},
-
-	// Login button
-	loginBtn: {
-		backgroundColor: COLORS.green,
+	// Botão entrar
+	botaoEntrar: {
+		backgroundColor: tema.verde,
 		borderRadius: 10,
 		height: 52,
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	loginBtnPressed: {
+	botaoEntrarPressionado: {
 		opacity: 0.85,
 	},
-	loginBtnText: {
+	textoBotaoEntrar: {
 		color: "#0d1117",
 		fontSize: 16,
 		fontWeight: "700",
 	},
-
-	// Footer
-	footer: {
+	// Rodapé
+	rodape: {
 		flexDirection: "row",
 		alignItems: "center",
 	},
-	footerText: {
+	textoRodape: {
 		fontSize: 14,
-		color: COLORS.textSecondary,
+		color: tema.textoSecundario,
 	},
-	footerLink: {
+	linkRodape: {
 		fontSize: 14,
-		color: COLORS.green,
+		color: tema.verde,
 		fontWeight: "600",
 	},
 });
