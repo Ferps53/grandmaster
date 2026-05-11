@@ -104,7 +104,7 @@ const estilo = StyleSheet.create({
   sessaoPartidas: {
     padding: 20,
   },
-  itemPartidaVitoria: {
+  itemPartida: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: tema.surfaceAlt,
@@ -206,7 +206,7 @@ export default function TelaPerfil() {
             <View
               style={[
                 estilo.barraParte,
-                { flex: 0.14, backgroundColor: "#ff4d4d" },
+                { flex: 0.14, backgroundColor: tema.vermelho },
               ]}
             />
           </View>
@@ -223,13 +223,40 @@ export default function TelaPerfil() {
               />
               <Text style={estilo.textoConquista}>Vitória Rápida</Text>
             </View>
+
+            <View style={estilo.cardConquista}>
+              <MaterialCommunityIcons
+                name="lightning-bolt"
+                size={30}
+                color={tema.verde}
+              />
+              <Text style={estilo.textoConquista}>Tático</Text>
+            </View>
+
+            <View style={estilo.cardConquista}>
+              <MaterialCommunityIcons
+                name="shield"
+                size={30}
+                color={tema.verde}
+              />
+              <Text style={estilo.textoConquista}>Defesa Sólida</Text>
+            </View>
+
+            <View style={estilo.cardConquista}>
+              <MaterialCommunityIcons
+                name="chess-king"
+                size={30}
+                color={tema.verde}
+              />
+              <Text style={estilo.textoConquista}>Full House</Text>
+            </View>
           </ScrollView>
         </View>
 
         <View style={estilo.sessaoPartidas}>
           <Text style={estilo.tituloSessao}>PARTIDAS RECENTES</Text>
 
-          <View style={estilo.itemPartidaVitoria}>
+          <View style={estilo.itemPartida}>
             <View style={estilo.avatarOponente}>
               <MaterialCommunityIcons
                 name="account"
