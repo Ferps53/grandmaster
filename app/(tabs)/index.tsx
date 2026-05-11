@@ -154,7 +154,7 @@ export default function TelaInicio() {
 						boardSize={width - 128}
 						gestureEnabled={false}
 						colors={{
-							black: tema.surfaceAlt,
+							black: tema.textoMudo,
 							white: tema.textoPrimario,
 							lastMoveHighlight: "rgba(74, 222, 128, 0.3)",
 						}}
