@@ -1,5 +1,6 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Chessboard from "react-native-chessboard";
+import { Chess } from "chess.js";
+import { useMemo, useState } from "react";
 import {
 	Pressable,
 	ScrollView,
@@ -8,9 +9,8 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
+import Chessboard from "react-native-chessboard";
 import tema from "@/src/constantes/tema";
-import { Chess } from "chess.js";
-import { useState, useMemo } from "react";
 
 type Jogador = {
 	nome: string;

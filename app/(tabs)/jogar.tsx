@@ -1,5 +1,4 @@
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import Chessboard from "react-native-chessboard";
 import { useState } from "react";
 import {
 	Pressable,
@@ -9,6 +8,7 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
+import Chessboard from "react-native-chessboard";
 import tema from "@/src/constantes/tema";
 
 type Jogador = {
