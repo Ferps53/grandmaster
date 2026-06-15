@@ -53,7 +53,7 @@ export default function TelaCadastro() {
 				"Erro ao cadastrar",
 				erro instanceof Error
 					? erro.message
-					: "Verifique os dados e tente novamente"
+					: "Verifique os dados e tente novamente",
 			);
 		} finally {
 			setCarregando(false);
@@ -81,9 +81,7 @@ export default function TelaCadastro() {
 
 					<View style={estilos.cartao}>
 						<View style={estilos.cabecalhoCartao}>
-							<Text style={estilos.tituloCartao}>
-								Crie sua Conta
-							</Text>
+							<Text style={estilos.tituloCartao}>Crie sua Conta</Text>
 						</View>
 
 						<View style={estilos.grupoCampo}>
@@ -241,9 +239,7 @@ export default function TelaCadastro() {
 							{carregando ? (
 								<ActivityIndicator color={tema.bg} />
 							) : (
-								<Text style={estilos.textoBotaoEntrar}>
-									Criar Conta
-								</Text>
+								<Text style={estilos.textoBotaoEntrar}>Criar Conta</Text>
 							)}
 						</Pressable>
 					</View>

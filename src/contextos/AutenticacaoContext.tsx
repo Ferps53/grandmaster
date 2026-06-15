@@ -68,7 +68,7 @@ export function ProveedorAutenticacao({
 			await AsyncStorage.setItem("token_auth", resposta.token);
 			await AsyncStorage.setItem(
 				"usuario_auth",
-				JSON.stringify(resposta.usuario)
+				JSON.stringify(resposta.usuario),
 			);
 		} catch (err) {
 			const mensagem =
@@ -97,13 +97,11 @@ export function ProveedorAutenticacao({
 					id: resposta.id,
 					email: resposta.email,
 					nome: resposta.nome,
-				})
+				}),
 			);
 		} catch (err) {
 			const mensagem =
-				err instanceof Error
-					? err.message
-					: "Erro ao fazer cadastro";
+				err instanceof Error ? err.message : "Erro ao fazer cadastro";
 			setErro(mensagem);
 			throw err;
 		}
@@ -140,7 +138,7 @@ export function useAutenticacao() {
 
 	if (!contexto) {
 		throw new Error(
-			"useAutenticacao deve ser usado dentro de ProveedorAutenticacao"
+			"useAutenticacao deve ser usado dentro de ProveedorAutenticacao",
 		);
 	}
 

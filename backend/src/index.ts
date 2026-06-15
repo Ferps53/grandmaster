@@ -7,10 +7,12 @@ const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(express.json());
-app.use(cors({
-	origin: (process.env.CORS_ORIGIN || "http://localhost:19000").split(","),
-	credentials: true,
-}));
+app.use(
+	cors({
+		origin: (process.env.CORS_ORIGIN || "http://localhost:19000").split(","),
+		credentials: true,
+	}),
+);
 
 // Routes
 app.use("/api/auth", authRoutes);

@@ -2,14 +2,14 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    KeyboardAvoidingView,
-    Platform,
-    Pressable,
-    Text,
-    TextInput,
-    View,
+	ActivityIndicator,
+	Alert,
+	KeyboardAvoidingView,
+	Platform,
+	Pressable,
+	Text,
+	TextInput,
+	View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tema from "../src/constantes/tema";
@@ -38,9 +38,7 @@ export default function TelaLogin() {
 		} catch (erro) {
 			Alert.alert(
 				"Erro ao fazer login",
-				erro instanceof Error
-					? erro.message
-					: "Verifique suas credenciais"
+				erro instanceof Error ? erro.message : "Verifique suas credenciais",
 			);
 		} finally {
 			setCarregando(false);

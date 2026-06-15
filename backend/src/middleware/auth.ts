@@ -17,14 +17,18 @@ declare global {
 
 const JWT_SECRET = process.env.JWT_SECRET || "secret";
 
-export function gerarToken(usuario: { id: string; email: string; nome: string }): string {
+export function gerarToken(usuario: {
+	id: string;
+	email: string;
+	nome: string;
+}): string {
 	return jwt.sign(usuario, JWT_SECRET, { expiresIn: "30d" });
 }
 
 export function verificarToken(
 	req: Request,
 	res: Response,
-	next: NextFunction
+	next: NextFunction,
 ): void {
 	const token = req.headers.authorization?.split(" ")[1];
 

@@ -48,7 +48,7 @@ class ServicoAPI {
 	async cadastro(
 		nome: string,
 		email: string,
-		senha: string
+		senha: string,
 	): Promise<RespostaCadastro> {
 		try {
 			const resposta = await fetch(`${API_URL}/auth/cadastro`, {

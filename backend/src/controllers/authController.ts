@@ -20,7 +20,9 @@ export const authController = {
 			const { email, senha } = req.body;
 
 			if (!email || !senha) {
-				return res.status(400).json({ mensagem: "Email e senha são obrigatórios" });
+				return res
+					.status(400)
+					.json({ mensagem: "Email e senha são obrigatórios" });
 			}
 
 			const usuario = db.getUsuarioPorEmail(email);
@@ -35,7 +37,11 @@ export const authController = {
 				return res.status(401).json({ mensagem: "Email ou senha incorretos" });
 			}
 
-			const token = gerarToken({ id: usuario.id, email: usuario.email, nome: usuario.nome });
+			const token = gerarToken({
+				id: usuario.id,
+				email: usuario.email,
+				nome: usuario.nome,
+			});
 
 			return res.status(200).json({
 				token,
@@ -52,13 +58,17 @@ export const authController = {
 			const { nome, email, senha } = req.body;
 
 			if (!nome || !email || !senha) {
-				return res.status(400).json({ mensagem: "Nome, email e senha são obrigatórios" });
+				return res
+					.status(400)
+					.json({ mensagem: "Nome, email e senha são obrigatórios" });
 			}
 
 			const usuarioExistente = db.getUsuarioPorEmail(email);
 
 			if (usuarioExistente) {
-				return res.status(409).json({ mensagem: "Email já cadastrado", campo: "email" });
+				return res
+					.status(409)
+					.json({ mensagem: "Email já cadastrado", campo: "email" });
 			}
 
 			const salt = await bcrypt.genSalt(10);
@@ -73,7 +83,11 @@ export const authController = {
 				criadoEm: new Date().toISOString(),
 			});
 
-			const token = gerarToken({ id: novoUsuario.id, email: novoUsuario.email, nome: novoUsuario.nome });
+			const token = gerarToken({
+				id: novoUsuario.id,
+				email: novoUsuario.email,
+				nome: novoUsuario.nome,
+			});
 
 			return res.status(201).json({
 				id: novoUsuario.id,
