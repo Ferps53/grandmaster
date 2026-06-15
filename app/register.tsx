@@ -2,6 +2,8 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
+	ActivityIndicator,
+	Alert,
 	KeyboardAvoidingView,
 	Platform,
 	Pressable,
@@ -11,18 +13,51 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tema from "../src/constantes/tema";
+import { useAutenticacao } from "../src/contextos/AutenticacaoContext";
 import estilos from "./estilos";
 
-export default function TelaLogin() {
-	const [identificador, setIdentificador] = useState("");
+export default function TelaCadastro() {
+	const [nome, setNome] = useState("");
+	const [email, setEmail] = useState("");
 	const [senha, setSenha] = useState("");
 	const [confirmarSenha, setConfirmarSenha] = useState("");
 	const [mostrarSenha, setMostrarSenha] = useState(false);
 	const [mostrarConfirmarSenha, setMostrarConfirmarSenha] = useState(false);
 	const [campoFocado, setCampoFocado] = useState<string | null>(null);
+	const [carregando, setCarregando] = useState(false);
 
-	function handleEntrar() {
-		router.replace("/(tabs)");
+	const { cadastrar } = useAutenticacao();
+
+	async function handleCadastrar() {
+		if (!nome || !email || !senha || !confirmarSenha) {
+			Alert.alert("Erro", "Por favor, preencha todos os campos");
+			return;
+		}
+
+		if (senha !== confirmarSenha) {
+			Alert.alert("Erro", "As senhas não conferem");
+			return;
+		}
+
+		if (senha.length < 6) {
+			Alert.alert("Erro", "A senha deve ter no mínimo 6 caracteres");
+			return;
+		}
+
+		setCarregando(true);
+		try {
+			await cadastrar(nome, email, senha);
+			router.replace("/(tabs)");
+		} catch (erro) {
+			Alert.alert(
+				"Erro ao cadastrar",
+				erro instanceof Error
+					? erro.message
+					: "Verifique os dados e tente novamente"
+			);
+		} finally {
+			setCarregando(false);
+		}
 	}
 
 	return (
@@ -47,35 +82,35 @@ export default function TelaLogin() {
 					<View style={estilos.cartao}>
 						<View style={estilos.cabecalhoCartao}>
 							<Text style={estilos.tituloCartao}>
-								Bem-vindo ao Grandmasters
+								Crie sua Conta
 							</Text>
 						</View>
 
 						<View style={estilos.grupoCampo}>
-							<Text style={estilos.labelCampo}>E-mail</Text>
+							<Text style={estilos.labelCampo}>Nome Completo</Text>
 							<View
 								style={[
 									estilos.inputWrapper,
-									campoFocado === "user" && estilos.inputWrapperFocado,
+									campoFocado === "nome" && estilos.inputWrapperFocado,
 								]}
 							>
 								<MaterialCommunityIcons
 									name="account"
 									size={20}
 									color={
-										campoFocado === "user" ? tema.verde : tema.textoSecundario
+										campoFocado === "nome" ? tema.verde : tema.textoSecundario
 									}
 								/>
 								<TextInput
 									style={estilos.input}
-									placeholder="Nome de Usuário"
+									placeholder="Seu nome"
 									placeholderTextColor={tema.textoMudo}
-									value={identificador}
-									onChangeText={setIdentificador}
-									onFocus={() => setCampoFocado("user")}
+									value={nome}
+									onChangeText={setNome}
+									onFocus={() => setCampoFocado("nome")}
 									onBlur={() => setCampoFocado(null)}
-									autoCapitalize="none"
-									keyboardType="email-address"
+									autoCapitalize="words"
+									editable={!carregando}
 								/>
 							</View>
 						</View>
@@ -85,26 +120,27 @@ export default function TelaLogin() {
 							<View
 								style={[
 									estilos.inputWrapper,
-									campoFocado === "id" && estilos.inputWrapperFocado,
+									campoFocado === "email" && estilos.inputWrapperFocado,
 								]}
 							>
 								<MaterialCommunityIcons
 									name="at"
 									size={20}
 									color={
-										campoFocado === "id" ? tema.verde : tema.textoSecundario
+										campoFocado === "email" ? tema.verde : tema.textoSecundario
 									}
 								/>
 								<TextInput
 									style={estilos.input}
-									placeholder="E-mail"
+									placeholder="seu.email@exemplo.com"
 									placeholderTextColor={tema.textoMudo}
-									value={identificador}
-									onChangeText={setIdentificador}
-									onFocus={() => setCampoFocado("id")}
+									value={email}
+									onChangeText={setEmail}
+									onFocus={() => setCampoFocado("email")}
 									onBlur={() => setCampoFocado(null)}
 									autoCapitalize="none"
 									keyboardType="email-address"
+									editable={!carregando}
 								/>
 							</View>
 						</View>
@@ -133,10 +169,12 @@ export default function TelaLogin() {
 									onFocus={() => setCampoFocado("senha")}
 									onBlur={() => setCampoFocado(null)}
 									secureTextEntry={!mostrarSenha}
+									editable={!carregando}
 								/>
 								<Pressable
 									onPress={() => setMostrarSenha((v) => !v)}
 									hitSlop={8}
+									disabled={carregando}
 								>
 									<MaterialCommunityIcons
 										name={mostrarSenha ? "eye-off-outline" : "eye-outline"}
@@ -174,10 +212,12 @@ export default function TelaLogin() {
 									onFocus={() => setCampoFocado("confirmarSenha")}
 									onBlur={() => setCampoFocado(null)}
 									secureTextEntry={!mostrarConfirmarSenha}
+									editable={!carregando}
 								/>
 								<Pressable
 									onPress={() => setMostrarConfirmarSenha((v) => !v)}
 									hitSlop={8}
+									disabled={carregando}
 								>
 									<MaterialCommunityIcons
 										name={
@@ -193,12 +233,18 @@ export default function TelaLogin() {
 							style={({ pressed }) => [
 								estilos.botaoEntrar,
 								pressed && estilos.botaoEntrarPressionado,
+								carregando && { opacity: 0.6 },
 							]}
-							onPress={handleEntrar}
+							onPress={handleCadastrar}
+							disabled={carregando}
 						>
-							<Text style={estilos.textoBotaoEntrar}>
-								Cadastrar uma nova conta
-							</Text>
+							{carregando ? (
+								<ActivityIndicator color={tema.bg} />
+							) : (
+								<Text style={estilos.textoBotaoEntrar}>
+									Criar Conta
+								</Text>
+							)}
 						</Pressable>
 					</View>
 
