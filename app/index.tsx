@@ -2,15 +2,18 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { Link, router } from "expo-router";
 import { useState } from "react";
 import {
-	KeyboardAvoidingView,
-	Platform,
-	Pressable,
-	Text,
-	TextInput,
-	View,
+    ActivityIndicator,
+    Alert,
+    KeyboardAvoidingView,
+    Platform,
+    Pressable,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tema from "../src/constantes/tema";
+import { useAutenticacao } from "../src/contextos/AutenticacaoContext";
 import estilos from "./estilos";
 
 export default function TelaLogin() {
@@ -18,9 +21,30 @@ export default function TelaLogin() {
 	const [senha, setSenha] = useState("");
 	const [mostrarSenha, setMostrarSenha] = useState(false);
 	const [campoFocado, setCampoFocado] = useState<string | null>(null);
+	const [carregando, setCarregando] = useState(false);
 
-	function handleEntrar() {
-		router.replace("/(tabs)");
+	const { entrar } = useAutenticacao();
+
+	async function handleEntrar() {
+		if (!identificador || !senha) {
+			Alert.alert("Erro", "Por favor, preencha todos os campos");
+			return;
+		}
+
+		setCarregando(true);
+		try {
+			await entrar(identificador, senha);
+			router.replace("/(tabs)");
+		} catch (erro) {
+			Alert.alert(
+				"Erro ao fazer login",
+				erro instanceof Error
+					? erro.message
+					: "Verifique suas credenciais"
+			);
+		} finally {
+			setCarregando(false);
+		}
 	}
 
 	return (
@@ -121,10 +145,16 @@ export default function TelaLogin() {
 							style={({ pressed }) => [
 								estilos.botaoEntrar,
 								pressed && estilos.botaoEntrarPressionado,
+								carregando && { opacity: 0.6 },
 							]}
 							onPress={handleEntrar}
+							disabled={carregando}
 						>
-							<Text style={estilos.textoBotaoEntrar}>Entrar</Text>
+							{carregando ? (
+								<ActivityIndicator color={tema.bg} />
+							) : (
+								<Text style={estilos.textoBotaoEntrar}>Entrar</Text>
+							)}
 						</Pressable>
 					</View>
 
