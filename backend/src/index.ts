@@ -1,7 +1,8 @@
 import cors from "cors";
 import express from "express";
-import { db } from "./db";
+import { conectar } from "./db";
 import authRoutes from "./routes/auth";
+import licoesRoutes from "./routes/licoes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -18,6 +19,7 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use("/api/licoes", licoesRoutes);
 
 app.get("/health", (req, res) => {
 	res.json({ status: "OK", timestamp: new Date().toISOString() });
@@ -27,13 +29,13 @@ app.use((req, res) => {
 	res.status(404).json({ mensagem: "Rota não encontrada" });
 });
 
-db.conectar()
+conectar()
 	.then(() => {
 		app.listen(PORT, () => {
 			console.log(`✅ API rodando em http://localhost:${PORT}`);
 		});
 	})
-	.catch((err) => {
+	.catch((err: Error) => {
 		console.error("Falha ao conectar no banco:", err);
 		process.exit(1);
 	});

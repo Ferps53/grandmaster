@@ -1,6 +1,6 @@
 import bcrypt from "bcryptjs";
 import { Request, Response } from "express";
-import { db } from "../db";
+import { usuariosDb as db } from "../db/usuarios";
 import { gerarToken } from "../middleware/auth";
 
 interface BodyLogin {
