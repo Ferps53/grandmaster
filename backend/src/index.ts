@@ -9,7 +9,10 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(
 	cors({
-		origin: (process.env.CORS_ORIGIN || "http://localhost:19000").split(","),
+		origin: (
+			process.env.CORS_ORIGIN ||
+			"http://localhost:19000,http://localhost:8081,http://localhost:8082"
+		).split(","),
 		credentials: true,
 	}),
 );
