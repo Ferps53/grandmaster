@@ -226,48 +226,14 @@ export default function TelaPerfil() {
                 size={14}
                 color={tema.verde}
               />
-              <Text style={estilo.textoElo}>{localUsuario?.elo} Elo</Text>
+              <Text style={estilo.textoElo}>{localUsuario?.elo} 500 Elo</Text>
             </View>
             <Text style={estilo.textoMudo}>
-              {formatarDataDeEntrada(
-                (localUsuario as any)?.createdAt ||
-                  (localUsuario as any)?.criadoEm ||
-                  (localUsuario as any)?.joinedAt,
-              )}
+              {formatarDataDeEntrada(localUsuario?.criadoEm)}
             </Text>
           </View>
         </View>
 
-        <View style={estilo.cartaoStatus}>
-          <Text style={estilo.tituloSessao}>VITÓRIA / DERROTA / EMPATE</Text>
-          <View style={estilo.rowEstatisticas}>
-            <Text style={estilo.porcentagemGrande}>64%</Text>
-            <Text style={[estilo.tendencia, { color: tema.verde }]}>
-              ↑ 2.4%
-            </Text>
-          </View>
-
-          <View style={estilo.barraProgressoContainer}>
-            <View
-              style={[
-                estilo.barraParte,
-                { flex: 0.64, backgroundColor: tema.verde },
-              ]}
-            />
-            <View
-              style={[
-                estilo.barraParte,
-                { flex: 0.22, backgroundColor: tema.textoSecundario },
-              ]}
-            />
-            <View
-              style={[
-                estilo.barraParte,
-                { flex: 0.14, backgroundColor: tema.vermelho },
-              ]}
-            />
-          </View>
-        </View>
 
         <View style={estilo.sessaoConquistas}>
           <Text style={estilo.tituloSessao}>CONQUISTAS</Text>
@@ -310,53 +276,7 @@ export default function TelaPerfil() {
           </ScrollView>
         </View>
 
-        <View style={estilo.sessaoPartidas}>
-          <Text style={estilo.tituloSessao}>PARTIDAS RECENTES</Text>
-
-          <View style={estilo.itemPartida}>
-            <View style={estilo.avatarOponente}>
-              <MaterialCommunityIcons
-                name="account"
-                size={24}
-                color={tema.textoMudo}
-              />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={estilo.nomeOponente}>Chess Player_</Text>
-              <Text style={estilo.detalhePartida}>BLITZ • 3M + 2S</Text>
-            </View>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={[estilo.resultadoPartida, { color: tema.verde }]}>
-                Vitória
-              </Text>
-              <Text style={estilo.eloGanho}>+12 Elo</Text>
-            </View>
-          </View>
-
-          <View style={estilo.itemPartidaDerrota}>
-            <View style={estilo.avatarOponente}>
-              <MaterialCommunityIcons
-                name="account"
-                size={24}
-                color={tema.textoMudo}
-              />
-            </View>
-            <View style={{ flex: 1, marginLeft: 12 }}>
-              <Text style={estilo.nomeOponente}>Carlinhos_gamer</Text>
-              <Text style={estilo.detalhePartida}>BLITZ • 5M</Text>
-            </View>
-            <View style={{ alignItems: "flex-end" }}>
-              <Text style={[estilo.resultadoPartida, { color: tema.vermelho }]}>
-                Derrota
-              </Text>
-              <Text style={estilo.eloGanho}>-15 Elo</Text>
-            </View>
-          </View>
-        </View>
-
-        <Pressable style={estilo.botaoHistorico}>
-          <Text style={estilo.textoBotaoHistorico}>VER HISTÓRICO COMPLETO</Text>
-        </Pressable>
+      
       </ScrollView>
     </View>
   );
