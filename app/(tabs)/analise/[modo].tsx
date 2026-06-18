@@ -14,11 +14,18 @@ import {
 } from "react-native";
 import Chessboard, { type ChessboardRef } from "react-native-chessboard";
 import type { Move } from "chess.js";
+import BadgeClassificacao from "@/src/componentes/analise/BadgeClassificacao";
 import BarraAvaliacao from "@/src/componentes/analise/BarraAvaliacao";
 import BarraSugestoes from "@/src/componentes/analise/BarraSugestoes";
 import tema from "@/src/constantes/tema";
 import type { AnaliseChessApi, ModoAnalise } from "@/src/model/Analise";
 import { analisarPosicao } from "@/src/servicos/chessApi";
+import {
+	type AvaliacaoLance,
+	type Classificacao,
+	classificarLance,
+	corClassificacao,
+} from "@/src/util/classificacao";
 
 const FEN_INICIAL = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1";
 
@@ -46,6 +53,11 @@ export default function TelaAnalise() {
 	const [analise, setAnalise] = useState<AnaliseChessApi | null>(null);
 	const [carregando, setCarregando] = useState(false);
 	const [erro, setErro] = useState<string | null>(null);
+	const [cache, setCache] = useState<Record<string, AnaliseChessApi>>({});
+	const [analisandoPartida, setAnalisandoPartida] = useState(false);
+	const [progressoBatch, setProgressoBatch] = useState({ atual: 0, total: 0 });
+	const reproduzindoRef = useRef(false);
+	const jaAutoAnalisouRef = useRef(false);
 
 	const [pgnInput, setPgnInput] = useState("");
 	const [pgnCarregado, setPgnCarregado] = useState(modo !== "pgn");
@@ -59,6 +71,11 @@ export default function TelaAnalise() {
 			setAnalise(null);
 			setCarregando(false);
 			setErro(null);
+			setCache({});
+			setAnalisandoPartida(false);
+			setProgressoBatch({ atual: 0, total: 0 });
+			reproduzindoRef.current = false;
+			jaAutoAnalisouRef.current = false;
 			setPgnInput("");
 			setPgnCarregado(modo !== "pgn");
 			setErroPgn(null);
@@ -74,6 +91,17 @@ export default function TelaAnalise() {
 	useEffect(() => {
 		if (!pgnCarregado) return;
 
+		const cached = cache[fen];
+		if (cached) {
+			setAnalise(cached);
+			setCarregando(false);
+			setErro(null);
+			if (abortRef.current) abortRef.current.abort();
+			return;
+		}
+
+		if (analisandoPartida) return;
+
 		const timeout = setTimeout(() => {
 			if (abortRef.current) abortRef.current.abort();
 			const controller = new AbortController();
@@ -84,6 +112,7 @@ export default function TelaAnalise() {
 			analisarPosicao(fen, 12, controller.signal)
 				.then((res) => {
 					setAnalise(res);
+					setCache((c) => ({ ...c, [fen]: res }));
 					setCarregando(false);
 				})
 				.catch((e: Error) => {
@@ -91,12 +120,13 @@ export default function TelaAnalise() {
 					setErro("Falha ao analisar posição");
 					setCarregando(false);
 				});
-		}, 350);
+		}, 100);
 
 		return () => clearTimeout(timeout);
-	}, [fen, pgnCarregado]);
+	}, [fen, pgnCarregado, cache, analisandoPartida]);
 
 	function aoMover(info: { move: Move; state: { fen: string } }) {
+		if (reproduzindoRef.current) return;
 		setFen(info.state.fen);
 		setHistorico((h) => [...h.slice(0, indice), info.move.san]);
 		setIndice((i) => i + 1);
@@ -140,19 +170,151 @@ export default function TelaAnalise() {
 		irPara(indice + 1);
 	}
 
+	const fensPorIndice = useMemo(() => {
+		const fens = [FEN_INICIAL];
+		const c = new Chess();
+		for (const san of historico) {
+			try {
+				c.move(san);
+			} catch {
+				break;
+			}
+			fens.push(c.fen());
+		}
+		return fens;
+	}, [historico]);
+
+	const lancesInfo = useMemo(() => {
+		const info: { uci: string; ehMate: boolean }[] = [];
+		const c = new Chess();
+		for (const san of historico) {
+			try {
+				const m = c.move(san);
+				const promo = m.promotion ?? "";
+				info.push({
+					uci: `${m.from}${m.to}${promo}`,
+					ehMate: c.isCheckmate(),
+				});
+			} catch {
+				break;
+			}
+		}
+		return info;
+	}, [historico]);
+
+	const avaliacoesPorLance = useMemo(() => {
+		const mapa = new Map<number, AvaliacaoLance>();
+		for (let i = 0; i < historico.length; i++) {
+			const fenAntes = fensPorIndice[i];
+			const info = lancesInfo[i];
+			if (!info) continue;
+			const aAntes = cache[fenAntes];
+			if (!aAntes) continue;
+			const brancasJogaram = i % 2 === 0;
+			if (info.ehMate) {
+				mapa.set(
+					i,
+					classificarLance(aAntes, aAntes, info.uci, brancasJogaram, true),
+				);
+				continue;
+			}
+			const fenDepois = fensPorIndice[i + 1];
+			const aDepois = cache[fenDepois];
+			if (!aDepois) continue;
+			mapa.set(i, classificarLance(aAntes, aDepois, info.uci, brancasJogaram));
+		}
+		return mapa;
+	}, [historico, fensPorIndice, lancesInfo, cache]);
+
+	const avaliacaoLanceAtual =
+		indice > 0 ? avaliacoesPorLance.get(indice - 1) : undefined;
+
+	async function analisarPartida() {
+		if (analisandoPartida || historico.length === 0) return;
+		setAnalisandoPartida(true);
+		reproduzindoRef.current = true;
+
+		const total = historico.length + 1;
+		setProgressoBatch({ atual: 0, total });
+
+		boardRef.current?.resetBoard(FEN_INICIAL);
+		setFen(FEN_INICIAL);
+		setIndice(0);
+
+		const cacheLocal: Record<string, AnaliseChessApi> = { ...cache };
+
+		async function garantirAnalise(f: string) {
+			if (cacheLocal[f]) return;
+			try {
+				const res = await analisarPosicao(f, 12);
+				cacheLocal[f] = res;
+				setCache((c) => ({ ...c, [f]: res }));
+			} catch {
+				// ignora falha
+			}
+		}
+
+		await garantirAnalise(FEN_INICIAL);
+		setProgressoBatch({ atual: 1, total });
+
+		for (let i = 0; i < historico.length; i++) {
+			const info = lancesInfo[i];
+			if (!info) break;
+			const from = info.uci.slice(0, 2) as never;
+			const to = info.uci.slice(2, 4) as never;
+			try {
+				await boardRef.current?.move({ from, to });
+			} catch {
+				// ignora animação falha
+			}
+			const fenDepois = fensPorIndice[i + 1];
+			setFen(fenDepois);
+			setIndice(i + 1);
+			if (!info.ehMate) {
+				await garantirAnalise(fenDepois);
+			}
+			setProgressoBatch({ atual: i + 2, total });
+		}
+
+		reproduzindoRef.current = false;
+		setAnalisandoPartida(false);
+	}
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: ref guard previne re-execução
+	useEffect(() => {
+		if (modo !== "pgn") return;
+		if (!pgnCarregado) return;
+		if (jaAutoAnalisouRef.current) return;
+		if (historico.length === 0) return;
+		jaAutoAnalisouRef.current = true;
+		analisarPartida();
+	}, [modo, pgnCarregado, historico.length]);
+
 	const titulo = modo === "pgn" ? "Análise de PGN" : "Nova análise";
 
 	const lances = useMemo(() => {
-		const linhas: { numero: number; brancas: string; pretas?: string }[] = [];
+		const linhas: {
+			numero: number;
+			brancas: string;
+			pretas?: string;
+			classifBrancas?: Classificacao;
+			classifPretas?: Classificacao;
+			indiceBrancas: number;
+			indicePretas: number;
+		}[] = [];
 		for (let i = 0; i < historico.length; i += 2) {
 			linhas.push({
 				numero: i / 2 + 1,
 				brancas: historico[i],
 				pretas: historico[i + 1],
+				classifBrancas: avaliacoesPorLance.get(i)?.classificacao,
+				classifPretas: avaliacoesPorLance.get(i + 1)?.classificacao,
+				indiceBrancas: i,
+				indicePretas: i + 1,
 			});
 		}
 		return linhas;
-	}, [historico]);
+	}, [historico, avaliacoesPorLance]);
 
 	if (!pgnCarregado) {
 		return (
@@ -270,6 +432,22 @@ export default function TelaAnalise() {
 					</Text>
 					{carregando && <ActivityIndicator size="small" color={tema.verde} />}
 				</View>
+				{avaliacaoLanceAtual && indice > 0 && (
+					<View style={estilos.linhaAvaliacaoLance}>
+						<BadgeClassificacao
+							classificacao={avaliacaoLanceAtual.classificacao}
+						/>
+						<Text style={estilos.detalheTexto}>
+							Lance: {historico[indice - 1]}
+						</Text>
+						{avaliacaoLanceAtual.classificacao !== "melhor" &&
+							avaliacaoLanceAtual.melhorLanceSan && (
+								<Text style={estilos.detalheMudo}>
+									Melhor: {avaliacaoLanceAtual.melhorLanceSan}
+								</Text>
+							)}
+					</View>
+				)}
 				{erro ? (
 					<Text style={estilos.textoErro}>{erro}</Text>
 				) : analise ? (
@@ -290,6 +468,24 @@ export default function TelaAnalise() {
 				) : (
 					<Text style={estilos.detalheMudo}>Aguardando análise...</Text>
 				)}
+				{historico.length > 0 && (
+					<Pressable
+						onPress={analisarPartida}
+						disabled={analisandoPartida}
+						style={[
+							estilos.botaoAnalisar,
+							analisandoPartida && estilos.botaoDesabilitado,
+						]}
+					>
+						{analisandoPartida ? (
+							<Text style={estilos.textoBotaoAnalisar}>
+								Analisando {progressoBatch.atual}/{progressoBatch.total}...
+							</Text>
+						) : (
+							<Text style={estilos.textoBotaoAnalisar}>Analisar partida</Text>
+						)}
+					</Pressable>
+				)}
 			</View>
 
 			<BarraSugestoes
@@ -307,8 +503,41 @@ export default function TelaAnalise() {
 						lances.map((l) => (
 							<View key={l.numero} style={estilos.linhaLance}>
 								<Text style={estilos.numeroLance}>{l.numero}.</Text>
-								<Text style={estilos.textoLance}>{l.brancas}</Text>
-								<Text style={estilos.textoLance}>{l.pretas ?? ""}</Text>
+								<Pressable
+									style={estilos.lanceCelula}
+									onPress={() => irPara(l.indiceBrancas + 1)}
+								>
+									<Text
+										style={[
+											estilos.textoLance,
+											l.classifBrancas && {
+												color: corClassificacao(l.classifBrancas),
+												fontWeight: "700",
+											},
+											indice === l.indiceBrancas + 1 && estilos.textoLanceAtivo,
+										]}
+									>
+										{l.brancas}
+									</Text>
+								</Pressable>
+								<Pressable
+									style={estilos.lanceCelula}
+									onPress={() => l.pretas && irPara(l.indicePretas + 1)}
+									disabled={!l.pretas}
+								>
+									<Text
+										style={[
+											estilos.textoLance,
+											l.classifPretas && {
+												color: corClassificacao(l.classifPretas),
+												fontWeight: "700",
+											},
+											indice === l.indicePretas + 1 && estilos.textoLanceAtivo,
+										]}
+									>
+										{l.pretas ?? ""}
+									</Text>
+								</Pressable>
 							</View>
 						))
 					)}
@@ -366,6 +595,30 @@ const estilos = StyleSheet.create({
 		fontWeight: "600",
 		minWidth: 60,
 		textAlign: "center",
+	},
+	linhaAvaliacaoLance: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 8,
+		flexWrap: "wrap",
+	},
+	botaoAnalisar: {
+		marginTop: 8,
+		backgroundColor: tema.verde,
+		borderRadius: 8,
+		paddingVertical: 8,
+		alignItems: "center",
+	},
+	textoBotaoAnalisar: {
+		color: "#0d1117",
+		fontSize: 13,
+		fontWeight: "700",
+	},
+	lanceCelula: {
+		flex: 1,
+	},
+	textoLanceAtivo: {
+		textDecorationLine: "underline",
 	},
 	cartaoAnalise: {
 		marginHorizontal: 16,
