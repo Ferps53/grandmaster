@@ -164,6 +164,32 @@ const estilo = StyleSheet.create({
   },
 });
 
+function formatarDataDeEntrada(rawDate?: string | number | null) {
+  if (!rawDate) return "Entrou recentemente";
+  const date = new Date(String(rawDate));
+  if (isNaN(date.getTime())) return "Data de entrada desconhecida";
+
+  const months = [
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro",
+  ];
+
+  const month = months[date.getMonth()];
+  const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+
+  return `Entrou em ${monthCapitalized} de ${date.getFullYear()}`;
+}
+
 export default function TelaPerfil() {
   const { usuario, token, sair } = useAutenticacao();
   const [localUsuario, setLocalUsuario] = useState(usuario);
@@ -192,7 +218,6 @@ export default function TelaPerfil() {
     <View style={estilo.root} edges={["top"]}>
       <ScrollView showsVerticalScrollIndicator={false}>
         <View style={estilo.headerPerfil}>
-          <Text style={estilo.rankTexto}>RANK: BRONZE</Text>
           <Text style={estilo.nomeUsuario}>{localUsuario?.nome}</Text>
           <View style={estilo.linhaInfo}>
             <View style={estilo.badgeElo}>
@@ -201,9 +226,15 @@ export default function TelaPerfil() {
                 size={14}
                 color={tema.verde}
               />
-              <Text style={estilo.textoElo}>500 Elo</Text>
+              <Text style={estilo.textoElo}>{localUsuario?.elo} Elo</Text>
             </View>
-            <Text style={estilo.textoMudo}>Entrou em Março de 2021</Text>
+            <Text style={estilo.textoMudo}>
+              {formatarDataDeEntrada(
+                (localUsuario as any)?.createdAt ||
+                  (localUsuario as any)?.criadoEm ||
+                  (localUsuario as any)?.joinedAt,
+              )}
+            </Text>
           </View>
         </View>
 
