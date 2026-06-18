@@ -1,0 +1,86 @@
+diff --git a/node_modules/react-native-chessboard/lib/commonjs/context/board-operations-context/index.js b/node_modules/react-native-chessboard/lib/commonjs/context/board-operations-context/index.js
+index 63365df..3c3760e 100644
+--- a/node_modules/react-native-chessboard/lib/commonjs/context/board-operations-context/index.js
++++ b/node_modules/react-native-chessboard/lib/commonjs/context/board-operations-context/index.js
+@@ -152,19 +152,12 @@ const BoardOperationsContextProviderComponent = /*#__PURE__*/_react.default.forw
+     var _chess$moves;
+ 
+     selectedSquare.value = square;
+-    const validSquares = (_chess$moves = chess.moves({
+-      square
+-    })) !== null && _chess$moves !== void 0 ? _chess$moves : []; // eslint-disable-next-line no-shadow
++    const validMoves = (_chess$moves = chess.moves({
++      square,
++      verbose: true
++    })) !== null && _chess$moves !== void 0 ? _chess$moves : [];
+ 
+-    selectableSquares.value = validSquares.map(square => {
+-      const splittedSquare = square.split('x');
+-
+-      if (splittedSquare.length === 0) {
+-        return square;
+-      }
+-
+-      return splittedSquare[splittedSquare.length - 1];
+-    });
++    selectableSquares.value = validMoves.map(m => m.to);
+   }, [chess, selectableSquares, selectedSquare]);
+   const moveTo = (0, _react.useCallback)(to => {
+     if (selectedSquare.value != null) {
+diff --git a/node_modules/react-native-chessboard/lib/module/context/board-operations-context/index.js b/node_modules/react-native-chessboard/lib/module/context/board-operations-context/index.js
+index eab1701..324eb54 100644
+--- a/node_modules/react-native-chessboard/lib/module/context/board-operations-context/index.js
++++ b/node_modules/react-native-chessboard/lib/module/context/board-operations-context/index.js
+@@ -130,19 +130,12 @@ const BoardOperationsContextProviderComponent = /*#__PURE__*/React.forwardRef((_
+     var _chess$moves;
+ 
+     selectedSquare.value = square;
+-    const validSquares = (_chess$moves = chess.moves({
+-      square
+-    })) !== null && _chess$moves !== void 0 ? _chess$moves : []; // eslint-disable-next-line no-shadow
++    const validMoves = (_chess$moves = chess.moves({
++      square,
++      verbose: true
++    })) !== null && _chess$moves !== void 0 ? _chess$moves : [];
+ 
+-    selectableSquares.value = validSquares.map(square => {
+-      const splittedSquare = square.split('x');
+-
+-      if (splittedSquare.length === 0) {
+-        return square;
+-      }
+-
+-      return splittedSquare[splittedSquare.length - 1];
+-    });
++    selectableSquares.value = validMoves.map(m => m.to);
+   }, [chess, selectableSquares, selectedSquare]);
+   const moveTo = useCallback(to => {
+     if (selectedSquare.value != null) {
+diff --git a/node_modules/react-native-chessboard/src/context/board-operations-context/index.tsx b/node_modules/react-native-chessboard/src/context/board-operations-context/index.tsx
+index 2fc9565..f8725ec 100644
+--- a/node_modules/react-native-chessboard/src/context/board-operations-context/index.tsx
++++ b/node_modules/react-native-chessboard/src/context/board-operations-context/index.tsx
+@@ -187,19 +187,12 @@ const BoardOperationsContextProviderComponent = React.forwardRef<
+     (square: Square) => {
+       selectedSquare.value = square;
+ 
+-      const validSquares = (chess.moves({
++      const validMoves = (chess.moves({
+         square,
+-      }) ?? []) as Square[];
++        verbose: true,
++      }) ?? []) as { to: Square }[];
+ 
+-      // eslint-disable-next-line no-shadow
+-      selectableSquares.value = validSquares.map((square) => {
+-        const splittedSquare = square.split('x');
+-        if (splittedSquare.length === 0) {
+-          return square;
+-        }
+-
+-        return splittedSquare[splittedSquare.length - 1] as Square;
+-      });
++      selectableSquares.value = validMoves.map((m) => m.to);
+     },
+     [chess, selectableSquares, selectedSquare]
+   );

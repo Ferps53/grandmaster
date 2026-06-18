@@ -1,0 +1,11 @@
+{
+	"usuarios": [
+		{
+			"id": "user_1781565214833",
+			"nome": "Ferps",
+			"email": "ferps@gmail.com",
+			"senha": "$2a$10$wTnk5ScmrILK81Fr5IsLP.lTTxHjc2s8Qygbfspf6XU7RTyT060nq",
+			"criadoEm": "2026-06-15T23:13:34.833Z"
+		}
+	]
+}
