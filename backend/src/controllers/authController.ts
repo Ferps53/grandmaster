@@ -25,7 +25,7 @@ export const authController = {
 					.json({ mensagem: "Email e senha são obrigatórios" });
 			}
 
-			const usuario = db.getUsuarioPorEmail(email);
+			const usuario = await db.getUsuarioPorEmail(email);
 
 			if (!usuario) {
 				return res.status(401).json({ mensagem: "Email ou senha incorretos" });
@@ -63,7 +63,7 @@ export const authController = {
 					.json({ mensagem: "Nome, email e senha são obrigatórios" });
 			}
 
-			const usuarioExistente = db.getUsuarioPorEmail(email);
+			const usuarioExistente = await db.getUsuarioPorEmail(email);
 
 			if (usuarioExistente) {
 				return res
@@ -74,14 +74,7 @@ export const authController = {
 			const salt = await bcrypt.genSalt(10);
 			const senhaHash = await bcrypt.hash(senha, salt);
 
-			const id = `user_${Date.now()}`;
-			const novoUsuario = db.criarUsuario({
-				id,
-				nome,
-				email,
-				senha: senhaHash,
-				criadoEm: new Date().toISOString(),
-			});
+			const novoUsuario = await db.criarUsuario({ nome, email, senha: senhaHash });
 
 			const token = gerarToken({
 				id: novoUsuario.id,
@@ -107,7 +100,7 @@ export const authController = {
 				return res.status(401).json({ mensagem: "Não autenticado" });
 			}
 
-			const usuario = db.getUsuarioPorId(req.usuario.id);
+			const usuario = await db.getUsuarioPorId(req.usuario.id);
 
 			if (!usuario) {
 				return res.status(404).json({ mensagem: "Usuário não encontrado" });
