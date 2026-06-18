@@ -1,6 +1,7 @@
 // Alterear o URL da API para apontar para o backend
 
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000/api";
+const API_URL =
+	process.env.EXPO_PUBLIC_API_URL || "http://192.168.18.15:3000/api";
 
 interface RespostaLogin {
 	token: string;

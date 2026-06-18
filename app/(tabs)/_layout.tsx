@@ -89,7 +89,7 @@ export default function LayoutTabs() {
 					}}
 				/>
 				<Tabs.Screen
-					name="analisar"
+					name="analise_menu"
 					options={{
 						title: "Analisar",
 						tabBarIcon: ({ color, size }) => (
@@ -101,6 +101,7 @@ export default function LayoutTabs() {
 						),
 					}}
 				/>
+				<Tabs.Screen name="analise/[modo]" options={{ href: null }} />
 				<Tabs.Screen
 					name="aprender"
 					options={{

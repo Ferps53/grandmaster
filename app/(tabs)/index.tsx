@@ -161,19 +161,6 @@ export default function TelaInicio() {
 					/>
 				</View>
 			</View>
-
-			<Text style={[estilo.bannerTitulo, { marginLeft: 16, marginBottom: 12 }]}>
-				Partidas anteriores
-			</Text>
-			{listPartidasAnteriores.map((partida) => (
-				<PartidasAnteriores
-					key={partida.nome}
-					nome={partida.nome}
-					elo={partida.elo}
-					status={partida.status}
-					ativo={partida.ativo}
-				/>
-			))}
 		</ScrollView>
 	);
 }
