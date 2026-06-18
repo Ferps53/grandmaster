@@ -1,5 +1,7 @@
 // Alterear o URL da API para apontar para o backend
 
+import type { ConteudoLicao } from "@/src/model/ConteudoLicao";
+
 const API_URL =
 	process.env.EXPO_PUBLIC_API_URL || "http://192.168.18.15:3000/api";
 
@@ -17,6 +19,15 @@ interface RespostaCadastro {
 	email: string;
 	nome: string;
 	token: string;
+}
+
+export type StatusLicaoAPI = "concluida" | "atual" | "bloqueada";
+
+export interface LicaoListaAPI {
+	id: string;
+	titulo: string;
+	icone: string;
+	status: StatusLicaoAPI;
 }
 
 class ServicoAPI {
@@ -74,6 +85,39 @@ class ServicoAPI {
 		} catch (erro) {
 			console.error("Erro na requisição de cadastro:", erro);
 			throw erro;
+		}
+	}
+
+	async listarLicoes(token: string): Promise<LicaoListaAPI[]> {
+		const resposta = await fetch(`${API_URL}/licoes`, {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		if (!resposta.ok) {
+			const erro = await resposta.json().catch(() => ({}));
+			throw new Error(erro.mensagem || "Erro ao listar lições");
+		}
+		return resposta.json();
+	}
+
+	async buscarLicao(token: string, id: string): Promise<ConteudoLicao> {
+		const resposta = await fetch(`${API_URL}/licoes/${id}`, {
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		if (!resposta.ok) {
+			const erro = await resposta.json().catch(() => ({}));
+			throw new Error(erro.mensagem || "Erro ao buscar lição");
+		}
+		return resposta.json();
+	}
+
+	async concluirLicao(token: string, id: string): Promise<void> {
+		const resposta = await fetch(`${API_URL}/licoes/${id}/concluir`, {
+			method: "POST",
+			headers: { Authorization: `Bearer ${token}` },
+		});
+		if (!resposta.ok) {
+			const erro = await resposta.json().catch(() => ({}));
+			throw new Error(erro.mensagem || "Erro ao concluir lição");
 		}
 	}
 

@@ -1,32 +1,34 @@
 import tema from "@/src/constantes/tema";
-import { LICOES_CONTEUDO } from "@/src/dados/licoes";
-import type { PassoLicao } from "@/src/model/ConteudoLicao";
+import { useAutenticacao } from "@/src/contextos/AutenticacaoContext";
+import type { ConteudoLicao, PassoLicao } from "@/src/model/ConteudoLicao";
+import servicoAPI from "@/src/servicos/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
-    Pressable,
-    ScrollView,
-    StyleSheet,
-    Text,
-    useWindowDimensions,
-    View,
+	ActivityIndicator,
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	Text,
+	useWindowDimensions,
+	View,
 } from "react-native";
 import type { ChessboardRef } from "react-native-chessboard";
 import Chessboard from "react-native-chessboard";
 
 type EstadoJogada = "aguardando" | "correto" | "errado" | "computador";
 
-const CHAVE_PROGRESSO_LICOES = "licoes_concluidas";
-
 export default function TelaLicao() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const router = useRouter();
+	const { token } = useAutenticacao();
 	const { width } = useWindowDimensions();
 	const tamTabuleiro = width - 32;
 
-	const licao = LICOES_CONTEUDO[id ?? ""];
+	const [licao, setLicao] = useState<ConteudoLicao | null>(null);
+	const [carregandoLicao, setCarregandoLicao] = useState(true);
+	const [erroCarregamento, setErroCarregamento] = useState<string | null>(null);
 
 	const [indicePasso, setIndicePasso] = useState(0);
 	const [estado, setEstado] = useState<EstadoJogada>("aguardando");
@@ -36,20 +38,41 @@ export default function TelaLicao() {
 
 	const passo: PassoLicao | undefined = licao?.passos[indicePasso];
 
-	const aplicarDestaquesEFen = useCallback(
-		async (p: PassoLicao) => {
-			await boardRef.current?.resetBoard(p.fen);
-			// pequeno delay para o board processar o reset
-			await new Promise((r) => setTimeout(r, 150));
-			boardRef.current?.resetAllHighlightedSquares();
-			if (p.destaques) {
-				for (const d of p.destaques) {
-					boardRef.current?.highlight({ square: d.square, color: d.color });
-				}
+	useEffect(() => {
+		if (!id || !token) return;
+		let cancelado = false;
+		setCarregandoLicao(true);
+		setErroCarregamento(null);
+		servicoAPI
+			.buscarLicao(token, id)
+			.then((dados) => {
+				if (!cancelado) setLicao(dados);
+			})
+			.catch((err) => {
+				if (!cancelado)
+					setErroCarregamento(
+						err instanceof Error ? err.message : "Erro ao carregar lição",
+					);
+			})
+			.finally(() => {
+				if (!cancelado) setCarregandoLicao(false);
+			});
+		return () => {
+			cancelado = true;
+		};
+	}, [id, token]);
+
+	const aplicarDestaquesEFen = useCallback(async (p: PassoLicao) => {
+		await boardRef.current?.resetBoard(p.fen);
+		// pequeno delay para o board processar o reset
+		await new Promise((r) => setTimeout(r, 150));
+		boardRef.current?.resetAllHighlightedSquares();
+		if (p.destaques) {
+			for (const d of p.destaques) {
+				boardRef.current?.highlight({ square: d.square, color: d.color });
 			}
-		},
-		[],
-	);
+		}
+	}, []);
 
 	// carrega o passo atual no tabuleiro
 	useEffect(() => {
@@ -104,7 +127,13 @@ export default function TelaLicao() {
 				setEstado("aguardando");
 			}
 		},
-		[passo, estado, executarRespostaComputador, avancarPasso, aplicarDestaquesEFen],
+		[
+			passo,
+			estado,
+			executarRespostaComputador,
+			avancarPasso,
+			aplicarDestaquesEFen,
+		],
 	);
 
 	const aoContinuar = useCallback(() => {
@@ -116,24 +145,26 @@ export default function TelaLicao() {
 	}, [router]);
 
 	const marcarLicaoConcluida = useCallback(async () => {
-		if (!id) return;
+		if (!id || !token) return;
 		try {
-			const dados = await AsyncStorage.getItem(CHAVE_PROGRESSO_LICOES);
-			const completas = new Set<string>(dados ? (JSON.parse(dados) as string[]) : []);
-			completas.add(id);
-			await AsyncStorage.setItem(
-				CHAVE_PROGRESSO_LICOES,
-				JSON.stringify(Array.from(completas)),
-			);
+			await servicoAPI.concluirLicao(token, id);
 		} catch {
-			// Não bloqueia o fluxo da lição caso o armazenamento falhe.
+			// Não bloqueia o fluxo da lição caso a chamada falhe.
 		}
-	}, [id]);
+	}, [id, token]);
 
 	useEffect(() => {
 		if (!concluida) return;
 		void marcarLicaoConcluida();
 	}, [concluida, marcarLicaoConcluida]);
+
+	if (carregandoLicao) {
+		return (
+			<View style={[estilos.root, estilos.rootConcluido]}>
+				<ActivityIndicator color={tema.verde} />
+			</View>
+		);
+	}
 
 	if (!licao) {
 		return (
@@ -146,7 +177,9 @@ export default function TelaLicao() {
 							color={tema.textoPrimario}
 						/>
 					</Pressable>
-					<Text style={estilos.headerTitulo}>Lição não encontrada</Text>
+					<Text style={estilos.headerTitulo}>
+						{erroCarregamento ?? "Lição não encontrada"}
+					</Text>
 				</View>
 			</View>
 		);
@@ -176,10 +209,7 @@ export default function TelaLicao() {
 						/>
 						<Text style={estilos.conclusaoXpTexto}>+50 XP</Text>
 					</View>
-					<Pressable
-						style={estilos.botaoContinuar}
-						onPress={aoContinuar}
-					>
+					<Pressable style={estilos.botaoContinuar} onPress={aoContinuar}>
 						<Text style={estilos.botaoContinuarTexto}>Continuar</Text>
 					</Pressable>
 				</View>

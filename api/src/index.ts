@@ -1,8 +1,8 @@
 import cors from "cors";
 import express from "express";
-import { conectar } from "./db";
-import authRoutes from "./routes/auth";
-import licoesRoutes from "./routes/licoes";
+import authRoutes from "./features/auth/auth.routes";
+import licoesRoutes from "./features/licoes/licoes.routes";
+import { conectar } from "./shared/db";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -21,11 +21,11 @@ app.use(
 app.use("/api/auth", authRoutes);
 app.use("/api/licoes", licoesRoutes);
 
-app.get("/health", (req, res) => {
+app.get("/health", (_req, res) => {
 	res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-app.use((req, res) => {
+app.use((_req, res) => {
 	res.status(404).json({ mensagem: "Rota não encontrada" });
 });
 

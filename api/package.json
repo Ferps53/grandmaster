@@ -1,11 +1,13 @@
 {
-	"name": "grandmaster-backend",
+	"name": "api",
 	"version": "1.0.0",
 	"description": "Backend API Grandmaster",
 	"scripts": {
 		"dev": "bun --watch src/index.ts",
 		"start": "bun src/index.ts",
-		"migrate": "bun migrate.ts"
+		"migrate": "bun migrate.ts",
+		"lint": "biome lint .",
+		"format": "biome format --write ."
 	},
 	"dependencies": {
 		"bcryptjs": "^2.4.3",
@@ -14,6 +16,7 @@
 		"jsonwebtoken": "^9.0.0"
 	},
 	"devDependencies": {
+		"@biomejs/biome": "^2.5.0",
 		"@types/bcryptjs": "^2.4.6",
 		"@types/cors": "^2.8.17",
 		"@types/express": "^4.17.21",

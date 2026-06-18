@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { licoesController } from "../controllers/licoesController";
-import { verificarToken } from "../middleware/auth";
+import { verificarToken } from "../../shared/middleware/auth";
+import { licoesController } from "./licoes.controller";
 
 const router = Router();
 

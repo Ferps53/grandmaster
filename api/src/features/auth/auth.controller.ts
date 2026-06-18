@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
-import { Request, Response } from "express";
-import { usuariosDb as db } from "../db/usuarios";
-import { gerarToken } from "../middleware/auth";
+import type { Request, Response } from "express";
+import { gerarToken } from "../../shared/middleware/auth";
+import { usuariosDb as db } from "./usuarios.db";
 
 interface BodyLogin {
 	email: string;
@@ -15,7 +15,7 @@ interface BodyCadastro {
 }
 
 export const authController = {
-	async login(req: Request<{}, {}, BodyLogin>, res: Response) {
+	async login(req: Request<object, object, BodyLogin>, res: Response) {
 		try {
 			const { email, senha } = req.body;
 
@@ -53,7 +53,7 @@ export const authController = {
 		}
 	},
 
-	async cadastro(req: Request<{}, {}, BodyCadastro>, res: Response) {
+	async cadastro(req: Request<object, object, BodyCadastro>, res: Response) {
 		try {
 			const { nome, email, senha } = req.body;
 
@@ -74,7 +74,11 @@ export const authController = {
 			const salt = await bcrypt.genSalt(10);
 			const senhaHash = await bcrypt.hash(senha, salt);
 
-			const novoUsuario = await db.criarUsuario({ nome, email, senha: senhaHash });
+			const novoUsuario = await db.criarUsuario({
+				nome,
+				email,
+				senha: senhaHash,
+			});
 
 			const token = gerarToken({
 				id: novoUsuario.id,
