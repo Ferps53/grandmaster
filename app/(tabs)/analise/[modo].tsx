@@ -369,6 +369,33 @@ export default function TelaAnalise() {
 				<Text style={estilos.tituloTela}>{titulo}</Text>
 			</View>
 
+			{analisandoPartida && (
+				<View style={estilos.bannerAnalisando}>
+					<ActivityIndicator size="small" color={tema.verde} />
+					<View style={estilos.bannerTextos}>
+						<Text style={estilos.bannerTitulo}>Analisando partida</Text>
+						<Text style={estilos.bannerSubtitulo}>
+							{progressoBatch.atual} / {progressoBatch.total} posições
+						</Text>
+					</View>
+					{progressoBatch.total > 0 && (
+						<View style={estilos.barraProgresso}>
+							<View
+								style={[
+									estilos.barraProgressoPreenchida,
+									{
+										width: `${Math.min(
+											100,
+											(progressoBatch.atual / progressoBatch.total) * 100,
+										)}%`,
+									},
+								]}
+							/>
+						</View>
+					)}
+				</View>
+			)}
+
 			<View style={estilos.tabuleiroColuna}>
 				<BarraAvaliacao
 					avaliacao={analise?.avaliacao ?? 0}
@@ -619,6 +646,42 @@ const estilos = StyleSheet.create({
 	},
 	textoLanceAtivo: {
 		textDecorationLine: "underline",
+	},
+	bannerAnalisando: {
+		marginHorizontal: 16,
+		marginBottom: 8,
+		paddingHorizontal: 12,
+		paddingVertical: 10,
+		backgroundColor: tema.surface,
+		borderRadius: 10,
+		borderWidth: 1,
+		borderColor: tema.verde,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+	},
+	bannerTextos: {
+		flex: 1,
+	},
+	bannerTitulo: {
+		color: tema.textoPrimario,
+		fontSize: 13,
+		fontWeight: "700",
+	},
+	bannerSubtitulo: {
+		color: tema.textoSecundario,
+		fontSize: 11,
+	},
+	barraProgresso: {
+		width: 80,
+		height: 6,
+		backgroundColor: tema.surfaceAlt,
+		borderRadius: 3,
+		overflow: "hidden",
+	},
+	barraProgressoPreenchida: {
+		height: "100%",
+		backgroundColor: tema.verde,
 	},
 	cartaoAnalise: {
 		marginHorizontal: 16,

@@ -79,7 +79,7 @@ class ServicoAPI {
 
 	async verificarToken(token: string): Promise<boolean> {
 		try {
-			const resposta = await fetch(`${API_URL}/verificar`, {
+			const resposta = await fetch(`${API_URL}/auth/verificar`, {
 				method: "GET",
 				headers: {
 					Authorization: `Bearer ${token}`,
