@@ -1,35 +1,43 @@
 import cors from "cors";
 import express from "express";
+import { conectar } from "./db";
 import authRoutes from "./routes/auth";
+import licoesRoutes from "./routes/licoes";
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(express.json());
 app.use(
 	cors({
-		origin: (process.env.CORS_ORIGIN || "http://localhost:19000").split(","),
+		origin: (
+			process.env.CORS_ORIGIN ||
+			"http://localhost:19000,http://localhost:8081,http://localhost:8082"
+		).split(","),
 		credentials: true,
 	}),
 );
 
-// Routes
 app.use("/api/auth", authRoutes);
+app.use("/api/licoes", licoesRoutes);
 
-// Health check
 app.get("/health", (req, res) => {
 	res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// 404
 app.use((req, res) => {
 	res.status(404).json({ mensagem: "Rota não encontrada" });
 });
 
-// Start server
-app.listen(PORT, () => {
-	console.log(`✅ API rodando em http://localhost:${PORT}`);
-});
+conectar()
+	.then(() => {
+		app.listen(PORT, () => {
+			console.log(`✅ API rodando em http://localhost:${PORT}`);
+		});
+	})
+	.catch((err: Error) => {
+		console.error("Falha ao conectar no banco:", err);
+		process.exit(1);
+	});
 
 export default app;

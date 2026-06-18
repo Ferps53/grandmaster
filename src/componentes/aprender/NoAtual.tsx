@@ -1,15 +1,40 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
 import tema from "@/src/constantes/tema";
 import type { Licao } from "@/src/model/Licao";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { estilosNo } from "./estilosNo";
 
 export default function NoAtual(licao: Licao) {
+	const router = useRouter();
+	const offset = licao.offset;
+	const badgeNaDireita = offset >= 0;
+
 	return (
 		<View style={estilosNo.wrapper}>
-			<View style={[estilosNo.linha, { justifyContent: "flex-start" }]}>
+			<View
+				style={[
+					estilosNo.linha,
+					{ justifyContent: badgeNaDireita ? "flex-start" : "flex-end" },
+				]}
+			>
+				{!badgeNaDireita && (
+					<View style={estilos.badge}>
+						<Text style={estilos.badgeTexto}>
+							ATUAL: {licao.titulo.toUpperCase()}
+						</Text>
+					</View>
+				)}
 				<Pressable
-					style={[estilosNo.no, estilos.no, { marginLeft: licao.offset }]}
+					style={[
+						estilosNo.no,
+						estilos.no,
+						{
+							marginLeft: badgeNaDireita ? offset : 0,
+							marginRight: !badgeNaDireita ? Math.abs(offset) : 0,
+						},
+					]}
+					onPress={() => router.push(`/licao/${licao.id}`)}
 				>
 					<MaterialCommunityIcons
 						name={licao.icone}
@@ -17,11 +42,13 @@ export default function NoAtual(licao: Licao) {
 						color="#0d1117"
 					/>
 				</Pressable>
-				<View style={estilos.badge}>
-					<Text style={estilos.badgeTexto}>
-						ATUAL: {licao.titulo.toUpperCase()}
-					</Text>
-				</View>
+				{badgeNaDireita && (
+					<View style={estilos.badge}>
+						<Text style={estilos.badgeTexto}>
+							ATUAL: {licao.titulo.toUpperCase()}
+						</Text>
+					</View>
+				)}
 			</View>
 		</View>
 	);

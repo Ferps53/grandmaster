@@ -1,10 +1,12 @@
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Pressable, StyleSheet, Text, View } from "react-native";
 import tema from "@/src/constantes/tema";
 import type { Licao } from "@/src/model/Licao";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { estilosNo } from "./estilosNo";
 
 export default function NoConcluido(licao: Licao) {
+	const router = useRouter();
 	const offset = licao.offset;
 	const labelNaDireita = offset >= 0;
 	return (
@@ -23,7 +25,8 @@ export default function NoConcluido(licao: Licao) {
 					</Text>
 				)}
 
-				<View
+				<Pressable
+					onPress={() => router.push(`/licao/${licao.id}`)}
 					style={[
 						estilosNo.no,
 						estilos.no,
@@ -38,7 +41,7 @@ export default function NoConcluido(licao: Licao) {
 						size={24}
 						color={tema.surface}
 					/>
-				</View>
+				</Pressable>
 
 				{labelNaDireita && (
 					<Text style={[estilosNo.label, estilos.label]}>{licao.titulo}</Text>
