@@ -2,82 +2,28 @@ import NoAtual from "@/src/componentes/aprender/NoAtual";
 import NoBloqueado from "@/src/componentes/aprender/NoBloqueado";
 import NoConcluido from "@/src/componentes/aprender/NoConcluido";
 import tema from "@/src/constantes/tema";
+import { useAutenticacao } from "@/src/contextos/AutenticacaoContext";
 import type { Licao } from "@/src/model/Licao";
+import servicoAPI, { type LicaoListaAPI } from "@/src/servicos/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+	ActivityIndicator,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 
-const CHAVE_PROGRESSO_LICOES = "licoes_concluidas";
-
-const LICOES_BASE: Omit<Licao, "status">[] = [
-	{
-		id: "1",
-		titulo: "Fundamentos",
-		icone: "medal",
-		offset: 60,
-	},
-	{
-		id: "2",
-		titulo: "Abertura",
-		icone: "chess-pawn",
-		offset: -60,
-	},
-	{
-		id: "3",
-		titulo: "Tática de Garfo",
-		icone: "head-cog",
-		offset: 60,
-	},
-	{
-		id: "4",
-		titulo: "Finais Básicos",
-		icone: "chess-king",
-		offset: -60,
-	},
-	{
-		id: "5",
-		titulo: "Desafio do Mestre",
-		icone: "gift",
-		offset: 60,
-	},
-	{
-		id: "6",
-		titulo: "Xeque-mate em 1",
-		icone: "chess-queen",
-		offset: -60,
-	},
-
-	{
-		id: "7",
-		titulo: "Xeque-mate em 2",
-		icone: "chess-queen",
-		offset: 60,
-	},
-
-	{
-		id: "8",
-		titulo: "Defesa contra o mate do pastor",
-		icone: "chess-bishop",
-		offset: -60,
-	},
-];
-
-function montarLicoes(completas: Set<string>): Licao[] {
-	const indiceAtual = LICOES_BASE.findIndex((licao) => !completas.has(licao.id));
-
-	return LICOES_BASE.map((licao, indice) => {
-		let status: Licao["status"] = "bloqueada";
-
-		if (completas.has(licao.id)) {
-			status = "concluida";
-		} else if (indiceAtual !== -1 && indice === indiceAtual) {
-			status = "atual";
-		}
-
-		return { ...licao, status };
-	});
+function mapearLicoes(lista: LicaoListaAPI[]): Licao[] {
+	return lista.map((l, indice) => ({
+		id: l.id,
+		titulo: l.titulo,
+		icone: l.icone as Licao["icone"],
+		status: l.status,
+		offset: indice % 2 === 0 ? 60 : -60,
+	}));
 }
 
 function renderNo(licao: Licao) {
@@ -92,24 +38,28 @@ function renderNo(licao: Licao) {
 }
 
 export default function TelaAprender() {
-	const [licoes, setLicoes] = useState<Licao[]>(montarLicoes(new Set()));
+	const { token } = useAutenticacao();
+	const [licoes, setLicoes] = useState<Licao[]>([]);
+	const [carregando, setCarregando] = useState(true);
+	const [erro, setErro] = useState<string | null>(null);
 
-	const carregarProgresso = useCallback(async () => {
+	const carregar = useCallback(async () => {
+		if (!token) return;
 		try {
-			const dados = await AsyncStorage.getItem(CHAVE_PROGRESSO_LICOES);
-			const completas = new Set<string>(
-				dados ? (JSON.parse(dados) as string[]) : [],
-			);
-			setLicoes(montarLicoes(completas));
-		} catch {
-			setLicoes(montarLicoes(new Set()));
+			setErro(null);
+			const lista = await servicoAPI.listarLicoes(token);
+			setLicoes(mapearLicoes(lista));
+		} catch (err) {
+			setErro(err instanceof Error ? err.message : "Erro ao carregar lições");
+		} finally {
+			setCarregando(false);
 		}
-	}, []);
+	}, [token]);
 
 	useFocusEffect(
 		useCallback(() => {
-			void carregarProgresso();
-		}, [carregarProgresso]),
+			void carregar();
+		}, [carregar]),
 	);
 
 	return (
@@ -122,13 +72,23 @@ export default function TelaAprender() {
 				/>
 				<Text style={estilos.xpTexto}>1250 XP</Text>
 			</View>
-			<ScrollView
-				style={estilos.root}
-				contentContainerStyle={estilos.conteudo}
-				showsVerticalScrollIndicator={false}
-			>
-				{licoes.map((licao, _) => renderNo(licao))}
-			</ScrollView>
+			{carregando ? (
+				<View style={estilos.centro}>
+					<ActivityIndicator color={tema.verde} />
+				</View>
+			) : erro ? (
+				<View style={estilos.centro}>
+					<Text style={estilos.erroTexto}>{erro}</Text>
+				</View>
+			) : (
+				<ScrollView
+					style={estilos.root}
+					contentContainerStyle={estilos.conteudo}
+					showsVerticalScrollIndicator={false}
+				>
+					{licoes.map((licao) => renderNo(licao))}
+				</ScrollView>
+			)}
 		</View>
 	);
 }
@@ -141,6 +101,16 @@ const estilos = StyleSheet.create({
 	conteudo: {
 		paddingVertical: 24,
 		paddingBottom: 80,
+	},
+	centro: {
+		flex: 1,
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 24,
+	},
+	erroTexto: {
+		color: tema.vermelho,
+		textAlign: "center",
 	},
 	xpContainer: {
 		position: "absolute",

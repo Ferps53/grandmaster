@@ -41,7 +41,9 @@ export const usuariosDb = {
 		return rows[0] ? rowToUsuario(rows[0]) : undefined;
 	},
 
-	async criarUsuario(dados: Omit<Usuario, "id" | "criadoEm">): Promise<Usuario> {
+	async criarUsuario(
+		dados: Omit<Usuario, "id" | "criadoEm">,
+	): Promise<Usuario> {
 		const rows = await sql<UsuarioRow[]>`
       INSERT INTO usuarios (nome, email, senha)
       VALUES (${dados.nome}, ${dados.email}, ${dados.senha})

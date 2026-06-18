@@ -1,4 +1,4 @@
-import { NextFunction, Request, Response } from "express";
+import type { NextFunction, Request, Response } from "express";
 import jwt from "jsonwebtoken";
 
 interface TokenPayload {
@@ -41,7 +41,7 @@ export function verificarToken(
 		const payload = jwt.verify(token, JWT_SECRET) as TokenPayload;
 		req.usuario = payload;
 		next();
-	} catch (erro) {
+	} catch {
 		res.status(401).json({ mensagem: "Token inválido ou expirado" });
 	}
 }

@@ -1,0 +1,22 @@
+{
+	"name": "grandmasters",
+	"private": true,
+	"version": "1.0.0",
+	"workspaces": [
+		"api",
+		"mobile"
+	],
+	"scripts": {
+		"dev:api": "bun --filter api --elide-lines=0 dev",
+		"dev:mobile": "bun --filter mobile --elide-lines=0 start",
+		"start:api": "bun --filter api --elide-lines=0 start",
+		"migrate": "bun --filter api migrate",
+		"lint:mobile": "bun --filter mobile lint",
+		"format": "bun --filter mobile format",
+		"prepare": "husky"
+	},
+	"devDependencies": {
+		"husky": "^9.1.7",
+		"typescript": "~5.9.2"
+	}
+}

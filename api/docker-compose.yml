@@ -17,7 +17,9 @@ services:
       retries: 10
 
   migrate:
-    build: .
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
     command: ["bun", "migrate.ts"]
     environment:
       DATABASE_URL: postgresql://grandmaster:grandmaster@postgres:5432/grandmaster
@@ -26,7 +28,9 @@ services:
         condition: service_healthy
 
   api:
-    build: .
+    build:
+      context: ..
+      dockerfile: api/Dockerfile
     restart: unless-stopped
     ports:
       - "3000:3000"

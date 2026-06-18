@@ -63,17 +63,30 @@ export const licoesDb = {
 
 		let encontrouAtual = false;
 		return licoes.map((l) => {
-			if (concluidasSet.has(l.id)) return { id: l.id, titulo: l.titulo, icone: l.icone, status: "concluida" };
+			if (concluidasSet.has(l.id))
+				return {
+					id: l.id,
+					titulo: l.titulo,
+					icone: l.icone,
+					status: "concluida",
+				};
 			if (!encontrouAtual) {
 				encontrouAtual = true;
 				return { id: l.id, titulo: l.titulo, icone: l.icone, status: "atual" };
 			}
-			return { id: l.id, titulo: l.titulo, icone: l.icone, status: "bloqueada" };
+			return {
+				id: l.id,
+				titulo: l.titulo,
+				icone: l.icone,
+				status: "bloqueada",
+			};
 		});
 	},
 
 	async getLicaoComPassos(licaoId: string): Promise<LicaoCompleta | undefined> {
-		const licoes = await sql<{ id: string; titulo: string; descricao: string }[]>`
+		const licoes = await sql<
+			{ id: string; titulo: string; descricao: string }[]
+		>`
       SELECT id, titulo, descricao FROM licoes WHERE id = ${licaoId}
     `;
 		if (!licoes[0]) return undefined;
@@ -84,23 +97,23 @@ export const licoesDb = {
       FROM passos_licao WHERE licao_id = ${licaoId} ORDER BY ordem
     `;
 
-		const destaques = passos.length > 0
-			? await sql<DestaqueRow[]>`
+		const destaques =
+			passos.length > 0
+				? await sql<DestaqueRow[]>`
           SELECT d.passo_id, d.square, d.color
           FROM destaques_passo d
           JOIN passos_licao p ON d.passo_id = p.id
           WHERE p.licao_id = ${licaoId}
         `
-			: [];
+				: [];
 
-		const destaquesPorPasso = destaques.reduce<Record<string, { square: string; color: string }[]>>(
-			(acc, d) => {
-				if (!acc[d.passo_id]) acc[d.passo_id] = [];
-				acc[d.passo_id].push({ square: d.square, color: d.color });
-				return acc;
-			},
-			{},
-		);
+		const destaquesPorPasso = destaques.reduce<
+			Record<string, { square: string; color: string }[]>
+		>((acc, d) => {
+			if (!acc[d.passo_id]) acc[d.passo_id] = [];
+			acc[d.passo_id].push({ square: d.square, color: d.color });
+			return acc;
+		}, {});
 
 		return {
 			...licoes[0],
@@ -111,7 +124,10 @@ export const licoesDb = {
 				fen: p.fen,
 				movimentoEsperado: { from: p.movimento_from, to: p.movimento_to },
 				destaques: destaquesPorPasso[p.id] ?? [],
-				respostaComputador: p.resposta_from ? { from: p.resposta_from, to: p.resposta_to! } : null,
+				respostaComputador:
+					p.resposta_from && p.resposta_to
+						? { from: p.resposta_from, to: p.resposta_to }
+						: null,
 			})),
 		};
 	},
