@@ -1,10 +1,21 @@
+import { useAutenticacao } from "@/src/contextos/AutenticacaoContext";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import { Tabs } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { router, Tabs } from "expo-router";
+import { useState } from "react";
+import { Modal, Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import tema from "../../src/constantes/tema";
 
 function BarraSuperior() {
+	const { sair } = useAutenticacao();
+	const [menuAberto, setMenuAberto] = useState(false);
+
+	async function deslogar() {
+		setMenuAberto(false);
+		await sair();
+		router.replace("/login");
+	}
+
 	return (
 		<View style={estilos.barraSuperior}>
 			<View>
@@ -15,13 +26,38 @@ function BarraSuperior() {
 				/>
 			</View>
 			<Text style={estilos.titulo}>Grandmaster</Text>
-			<Pressable style={{ marginLeft: "auto" }}>
+			<Pressable
+				style={{ marginLeft: "auto" }}
+				onPress={() => setMenuAberto(true)}
+			>
 				<MaterialCommunityIcons
 					name="account-circle"
 					size={32}
 					color={tema.textoSecundario}
 				/>
 			</Pressable>
+
+			<Modal
+				visible={menuAberto}
+				transparent
+				animationType="fade"
+				onRequestClose={() => setMenuAberto(false)}
+			>
+				<Pressable
+					style={estilos.overlay}
+					onPress={() => setMenuAberto(false)}
+				/>
+				<View style={estilos.menu}>
+					<Pressable style={estilos.itemMenu} onPress={deslogar}>
+						<MaterialCommunityIcons
+							name="logout"
+							size={20}
+							color={tema.vermelho}
+						/>
+						<Text style={estilos.itemMenuTexto}>Sair</Text>
+					</Pressable>
+				</View>
+			</Modal>
 		</View>
 	);
 }
@@ -43,7 +79,35 @@ const estilos = StyleSheet.create({
 		color: tema.verde,
 		letterSpacing: -1,
 	},
+	overlay: {
+		flex: 1,
+		backgroundColor: "rgba(0,0,0,0.4)",
+	},
+	menu: {
+		position: "absolute",
+		top: 56,
+		right: 12,
+		backgroundColor: tema.surface,
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: tema.borda,
+		paddingVertical: 6,
+		minWidth: 160,
+	},
+	itemMenu: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 10,
+		paddingHorizontal: 14,
+		paddingVertical: 12,
+	},
+	itemMenuTexto: {
+		color: tema.vermelho,
+		fontSize: 15,
+		fontWeight: "600",
+	},
 });
+
 export default function LayoutTabs() {
 	return (
 		<SafeAreaView
