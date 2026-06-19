@@ -7,6 +7,7 @@ import { Chess, type Square } from "chess.js";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
 	ActivityIndicator,
+	Modal,
 	Pressable,
 	StyleSheet,
 	Text,
@@ -287,61 +288,73 @@ export default function TelaPuzzles() {
 				</View>
 			</View>
 
-			{fase === "finalizado" && resultado && (
-				<View style={estilos.painelResultado}>
-					<MaterialCommunityIcons
-						name={
-							resultado.resolveuPrimeira
-								? "trophy"
-								: resultado.resolveu
-									? "check-circle"
-									: "close-circle"
-						}
-						size={48}
-						color={
-							resultado.resolveuPrimeira
-								? tema.verde
-								: resultado.resolveu
-									? tema.verde
-									: tema.vermelho
-						}
-					/>
-					<Text style={estilos.resultadoTitulo}>
-						{resultado.resolveuPrimeira
-							? "Excelente!"
-							: resultado.resolveu
-								? "Concluído"
-								: "Sem sucesso"}
-					</Text>
-					<View style={estilos.linhaRating}>
-						<Text style={estilos.ratingTexto}>
-							{Math.round(resultado.ratingAntigo)}
-						</Text>
-						<MaterialCommunityIcons
-							name="arrow-right"
-							size={18}
-							color={tema.textoMudo}
-						/>
-						<Text style={estilos.ratingTexto}>
-							{Math.round(resultado.ratingNovo)}
-						</Text>
-						<Text
-							style={[
-								estilos.deltaTexto,
-								resultado.delta >= 0
-									? estilos.deltaPositivo
-									: estilos.deltaNegativo,
-							]}
-						>
-							{resultado.delta >= 0 ? "+" : ""}
-							{Math.round(resultado.delta)}
-						</Text>
-					</View>
-					<Pressable style={estilos.botaoPrimario} onPress={carregarProximo}>
-						<Text style={estilos.botaoPrimarioTexto}>Próximo puzzle</Text>
-					</Pressable>
+			<Modal
+				visible={fase === "finalizado" && resultado !== null}
+				transparent
+				animationType="fade"
+				onRequestClose={carregarProximo}
+			>
+				<View style={estilos.dialogOverlay}>
+					{resultado && (
+						<View style={estilos.dialogConteudo}>
+							<MaterialCommunityIcons
+								name={
+									resultado.resolveuPrimeira
+										? "trophy"
+										: resultado.resolveu
+											? "check-circle"
+											: "close-circle"
+								}
+								size={56}
+								color={
+									resultado.resolveuPrimeira
+										? tema.verde
+										: resultado.resolveu
+											? tema.verde
+											: tema.vermelho
+								}
+							/>
+							<Text style={estilos.resultadoTitulo}>
+								{resultado.resolveuPrimeira
+									? "Excelente!"
+									: resultado.resolveu
+										? "Concluído"
+										: "Sem sucesso"}
+							</Text>
+							<View style={estilos.linhaRating}>
+								<Text style={estilos.ratingTexto}>
+									{Math.round(resultado.ratingAntigo)}
+								</Text>
+								<MaterialCommunityIcons
+									name="arrow-right"
+									size={18}
+									color={tema.textoMudo}
+								/>
+								<Text style={estilos.ratingTexto}>
+									{Math.round(resultado.ratingNovo)}
+								</Text>
+								<Text
+									style={[
+										estilos.deltaTexto,
+										resultado.delta >= 0
+											? estilos.deltaPositivo
+											: estilos.deltaNegativo,
+									]}
+								>
+									{resultado.delta >= 0 ? "+" : ""}
+									{Math.round(resultado.delta)}
+								</Text>
+							</View>
+							<Pressable
+								style={estilos.botaoPrimario}
+								onPress={carregarProximo}
+							>
+								<Text style={estilos.botaoPrimarioTexto}>Próximo puzzle</Text>
+							</Pressable>
+						</View>
+					)}
 				</View>
-			)}
+			</Modal>
 		</View>
 	);
 }
@@ -417,14 +430,21 @@ const estilos = StyleSheet.create({
 		fontWeight: "600",
 		flex: 1,
 	},
-	painelResultado: {
-		marginHorizontal: 16,
-		marginTop: 16,
-		backgroundColor: tema.surface,
-		borderRadius: 14,
-		padding: 20,
+	dialogOverlay: {
+		flex: 1,
+		backgroundColor: "rgba(0,0,0,0.7)",
 		alignItems: "center",
-		gap: 10,
+		justifyContent: "center",
+		padding: 24,
+	},
+	dialogConteudo: {
+		width: "100%",
+		maxWidth: 360,
+		backgroundColor: tema.surface,
+		borderRadius: 16,
+		padding: 24,
+		alignItems: "center",
+		gap: 12,
 		borderWidth: 1,
 		borderColor: tema.borda,
 	},
