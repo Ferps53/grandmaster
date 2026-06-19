@@ -1,4 +1,4 @@
-import tema from "@/src/constantes/tema";
+import tema, { coresTabuleiro } from "@/src/constantes/tema";
 import { useAutenticacao } from "@/src/contextos/AutenticacaoContext";
 import type { ConteudoLicao, PassoLicao } from "@/src/model/ConteudoLicao";
 import servicoAPI from "@/src/servicos/api";
@@ -16,6 +16,7 @@ import {
 } from "react-native";
 import type { ChessboardRef } from "react-native-chessboard";
 import Chessboard from "react-native-chessboard";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 type EstadoJogada = "aguardando" | "correto" | "errado" | "computador";
 
@@ -34,6 +35,7 @@ export default function TelaLicao() {
 	const [estado, setEstado] = useState<EstadoJogada>("aguardando");
 	const [concluida, setConcluida] = useState(false);
 	const [tentativas, setTentativas] = useState(0);
+	const [xpGanho, setXpGanho] = useState<number | null>(null);
 	const boardRef = useRef<ChessboardRef>(null);
 
 	const passo: PassoLicao | undefined = licao?.passos[indicePasso];
@@ -63,7 +65,7 @@ export default function TelaLicao() {
 	}, [id, token]);
 
 	const aplicarDestaquesEFen = useCallback(async (p: PassoLicao) => {
-		await boardRef.current?.resetBoard(p.fen);
+		boardRef.current?.resetBoard(p.fen);
 		// pequeno delay para o board processar o reset
 		await new Promise((r) => setTimeout(r, 150));
 		boardRef.current?.resetAllHighlightedSquares();
@@ -147,7 +149,8 @@ export default function TelaLicao() {
 	const marcarLicaoConcluida = useCallback(async () => {
 		if (!id || !token) return;
 		try {
-			await servicoAPI.concluirLicao(token, id);
+			const resultado = await servicoAPI.concluirLicao(token, id);
+			setXpGanho(resultado.xpGanho);
 		} catch {
 			// Não bloqueia o fluxo da lição caso a chamada falhe.
 		}
@@ -160,15 +163,18 @@ export default function TelaLicao() {
 
 	if (carregandoLicao) {
 		return (
-			<View style={[estilos.root, estilos.rootConcluido]}>
+			<SafeAreaView
+				style={[estilos.root, estilos.rootConcluido]}
+				edges={["top"]}
+			>
 				<ActivityIndicator color={tema.verde} />
-			</View>
+			</SafeAreaView>
 		);
 	}
 
 	if (!licao) {
 		return (
-			<View style={estilos.root}>
+			<SafeAreaView style={estilos.root} edges={["top"]}>
 				<View style={estilos.header}>
 					<Pressable style={estilos.botaoVoltar} onPress={() => router.back()}>
 						<MaterialCommunityIcons
@@ -181,13 +187,16 @@ export default function TelaLicao() {
 						{erroCarregamento ?? "Lição não encontrada"}
 					</Text>
 				</View>
-			</View>
+			</SafeAreaView>
 		);
 	}
 
 	if (concluida) {
 		return (
-			<View style={[estilos.root, estilos.rootConcluido]}>
+			<SafeAreaView
+				style={[estilos.root, estilos.rootConcluido]}
+				edges={["top"]}
+			>
 				<View style={estilos.conclusaoContainer}>
 					<View style={estilos.conclusaoIconeWrapper}>
 						<MaterialCommunityIcons
@@ -201,26 +210,28 @@ export default function TelaLicao() {
 					<Text style={estilos.conclusaoDescricao}>
 						Você completou todos os {licao.passos.length} passos com sucesso!
 					</Text>
-					<View style={estilos.conclusaoXp}>
-						<MaterialCommunityIcons
-							name="star-four-points"
-							size={16}
-							color="#0d1117"
-						/>
-						<Text style={estilos.conclusaoXpTexto}>+50 XP</Text>
-					</View>
+					{xpGanho !== null && xpGanho > 0 && (
+						<View style={estilos.conclusaoXp}>
+							<MaterialCommunityIcons
+								name="star-four-points"
+								size={16}
+								color="#0d1117"
+							/>
+							<Text style={estilos.conclusaoXpTexto}>+{xpGanho} XP</Text>
+						</View>
+					)}
 					<Pressable style={estilos.botaoContinuar} onPress={aoContinuar}>
 						<Text style={estilos.botaoContinuarTexto}>Continuar</Text>
 					</Pressable>
 				</View>
-			</View>
+			</SafeAreaView>
 		);
 	}
 
 	const feedbackVisivel = estado === "correto" || estado === "errado";
 
 	return (
-		<View style={estilos.root}>
+		<SafeAreaView style={estilos.root} edges={["top"]}>
 			{/* Header */}
 			<View style={estilos.header}>
 				<Pressable style={estilos.botaoVoltar} onPress={() => router.back()}>
@@ -278,46 +289,45 @@ export default function TelaLicao() {
 						fen={passo?.fen}
 						gestureEnabled={estado === "aguardando"}
 						onMove={aoMover}
-						colors={{
-							black: tema.textoMudo,
-							white: tema.textoSecundario,
-							lastMoveHighlight: "rgba(74, 222, 128, 0.35)",
-							checkmateHighlight: "#ef4444",
-						}}
+						colors={coresTabuleiro}
 						withLetters
 						withNumbers
 					/>
 				</View>
 
-				{/* Feedback de jogada */}
-				{feedbackVisivel && (
-					<View
-						style={[
-							estilos.feedbackCard,
-							estado === "correto"
+				{/* Feedback de jogada — slot fixo pra não empurrar tabuleiro */}
+				<View
+					style={[
+						estilos.feedbackCard,
+						feedbackVisivel
+							? estado === "correto"
 								? estilos.feedbackCorreto
-								: estilos.feedbackErrado,
-						]}
-					>
-						<MaterialCommunityIcons
-							name={estado === "correto" ? "check-circle" : "close-circle"}
-							size={22}
-							color={estado === "correto" ? tema.verde : tema.vermelho}
-						/>
-						<Text
-							style={[
-								estilos.feedbackTexto,
-								estado === "correto"
-									? estilos.feedbackTextoCorreto
-									: estilos.feedbackTextoErrado,
-							]}
-						>
-							{estado === "correto"
-								? "Correto! Muito bem!"
-								: "Movimento incorreto. Tente novamente!"}
-						</Text>
-					</View>
-				)}
+								: estilos.feedbackErrado
+							: estilos.feedbackInvisivel,
+					]}
+				>
+					{feedbackVisivel && (
+						<>
+							<MaterialCommunityIcons
+								name={estado === "correto" ? "check-circle" : "close-circle"}
+								size={22}
+								color={estado === "correto" ? tema.verde : tema.vermelho}
+							/>
+							<Text
+								style={[
+									estilos.feedbackTexto,
+									estado === "correto"
+										? estilos.feedbackTextoCorreto
+										: estilos.feedbackTextoErrado,
+								]}
+							>
+								{estado === "correto"
+									? "Correto! Muito bem!"
+									: "Movimento incorreto. Tente novamente!"}
+							</Text>
+						</>
+					)}
+				</View>
 
 				{/* Dica (aparece após 2 tentativas erradas) */}
 				{passo?.dica && tentativas >= 2 && estado === "aguardando" && (
@@ -331,7 +341,7 @@ export default function TelaLicao() {
 					</View>
 				)}
 			</ScrollView>
-		</View>
+		</SafeAreaView>
 	);
 }
 
@@ -407,17 +417,23 @@ const estilos = StyleSheet.create({
 		flex: 1,
 	},
 	scrollConteudo: {
+		flexGrow: 1,
 		paddingHorizontal: 16,
 		paddingBottom: 32,
 		gap: 16,
+		alignItems: "center",
+		justifyContent: "center",
 	},
 
 	// Card instrução
 	cardInstrucao: {
+		alignSelf: "stretch",
 		backgroundColor: tema.surface,
 		borderRadius: 16,
 		padding: 16,
 		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
 		gap: 12,
 		borderWidth: 1,
 		borderColor: tema.borda,
@@ -430,16 +446,20 @@ const estilos = StyleSheet.create({
 		color: tema.textoPrimario,
 		fontSize: 15,
 		lineHeight: 22,
+		textAlign: "center",
 	},
 
 	// Tabuleiro
 	tabuleiroWrapper: {
+		alignSelf: "center",
 		borderRadius: 12,
 		overflow: "hidden",
 	},
 
 	// Feedback
 	feedbackCard: {
+		alignSelf: "stretch",
+		minHeight: 54,
 		borderRadius: 12,
 		padding: 14,
 		flexDirection: "row",
@@ -454,6 +474,10 @@ const estilos = StyleSheet.create({
 	feedbackErrado: {
 		backgroundColor: "rgba(239,68,68,0.1)",
 		borderColor: "rgba(239,68,68,0.3)",
+	},
+	feedbackInvisivel: {
+		backgroundColor: "transparent",
+		borderColor: "transparent",
 	},
 	feedbackTexto: {
 		fontSize: 15,

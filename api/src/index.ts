@@ -2,6 +2,8 @@ import cors from "cors";
 import express from "express";
 import authRoutes from "./features/auth/auth.routes";
 import licoesRoutes from "./features/licoes/licoes.routes";
+import perfilRoutes from "./features/perfil/perfil.routes";
+import puzzlesRoutes from "./features/puzzles/puzzles.routes";
 import { conectar } from "./shared/db";
 
 const app = express();
@@ -20,6 +22,8 @@ app.use(
 
 app.use("/api/auth", authRoutes);
 app.use("/api/licoes", licoesRoutes);
+app.use("/api/puzzles", puzzlesRoutes);
+app.use("/api/perfil", perfilRoutes);
 
 app.get("/health", (_req, res) => {
 	res.json({ status: "OK", timestamp: new Date().toISOString() });

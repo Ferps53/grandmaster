@@ -40,6 +40,7 @@ function renderNo(licao: Licao) {
 export default function TelaAprender() {
 	const { token } = useAutenticacao();
 	const [licoes, setLicoes] = useState<Licao[]>([]);
+	const [xp, setXp] = useState<number | null>(null);
 	const [carregando, setCarregando] = useState(true);
 	const [erro, setErro] = useState<string | null>(null);
 
@@ -47,8 +48,12 @@ export default function TelaAprender() {
 		if (!token) return;
 		try {
 			setErro(null);
-			const lista = await servicoAPI.listarLicoes(token);
+			const [lista, perfil] = await Promise.all([
+				servicoAPI.listarLicoes(token),
+				servicoAPI.obterPerfil(token),
+			]);
 			setLicoes(mapearLicoes(lista));
+			setXp(perfil.xp);
 		} catch (err) {
 			setErro(err instanceof Error ? err.message : "Erro ao carregar lições");
 		} finally {
@@ -70,7 +75,7 @@ export default function TelaAprender() {
 					size={14}
 					color="#0d1117"
 				/>
-				<Text style={estilos.xpTexto}>1250 XP</Text>
+				<Text style={estilos.xpTexto}>{xp ?? 0} XP</Text>
 			</View>
 			{carregando ? (
 				<View style={estilos.centro}>

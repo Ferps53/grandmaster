@@ -86,7 +86,7 @@ export default function TelaLogin() {
 								/>
 								<TextInput
 									style={estilos.input}
-									placeholder="E-mail ou Usuário"
+									placeholder="E-mail"
 									placeholderTextColor={tema.textoMudo}
 									value={identificador}
 									onChangeText={setIdentificador}

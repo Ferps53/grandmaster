@@ -1,38 +1,146 @@
+import tema from "@/src/constantes/tema";
+import { useAutenticacao } from "@/src/contextos/AutenticacaoContext";
+import type { Perfil } from "@/src/model/Perfil";
+import servicoAPI from "@/src/servicos/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
+import { useCallback, useState } from "react";
 import {
+	ActivityIndicator,
 	ImageBackground,
 	Pressable,
 	ScrollView,
 	StyleSheet,
 	Text,
-	useWindowDimensions,
 	View,
 } from "react-native";
-import Chessboard from "react-native-chessboard";
-import PartidasAnteriores from "@/src/componentes/PartidasAnteriores";
-import tema from "@/src/constantes/tema";
-import type { PropsParidasAnteriores } from "@/src/model/PartidasAnteriores";
 import estilos from "../estilos";
+
+const LIMITE_RD_PROVISORIO = 110;
+
+export default function TelaInicio() {
+	const { token } = useAutenticacao();
+	const [perfil, setPerfil] = useState<Perfil | null>(null);
+	const [carregando, setCarregando] = useState(true);
+
+	const carregar = useCallback(async () => {
+		if (!token) {
+			return;
+		}
+		try {
+			const dados = await servicoAPI.obterPerfil(token);
+			setPerfil(dados);
+		} catch (err) {
+			console.error("Erro ao carregar perfil:", err);
+		} finally {
+			setCarregando(false);
+		}
+	}, [token]);
+
+	useFocusEffect(
+		useCallback(() => {
+			void carregar();
+		}, [carregar]),
+	);
+
+	const ratingExibido = perfil ? Math.round(perfil.rating) : null;
+	const provisorio = perfil ? perfil.rd > LIMITE_RD_PROVISORIO : false;
+
+	return (
+		<ScrollView style={{ gap: 16 }}>
+			<ImageBackground
+				source={require("../../assets/images/jogar_agora.webp")}
+				style={estilo.banner}
+				imageStyle={{ borderRadius: 16 }}
+			>
+				<View style={estilo.bannerConteudo}>
+					<View>
+						<Text style={estilo.bannerTitulo}>O tabuleiro te espera</Text>
+						<Text style={estilo.bannerSubtitulo}>
+							Resolva puzzles táticos e ganhe rating.
+						</Text>
+					</View>
+					<Pressable
+						style={estilos.botaoEntrar}
+						onPress={() => {
+							router.replace("/(tabs)/puzzles");
+						}}
+					>
+						<Text style={estilos.textoBotaoEntrar}>Jogar agora</Text>
+					</Pressable>
+				</View>
+			</ImageBackground>
+
+			<View style={estilo.cartao}>
+				<Text style={estilo.ratingTexto}>Rating de puzzles</Text>
+				{carregando || ratingExibido === null ? (
+					<View style={estilo.ratingLoader}>
+						<ActivityIndicator color={tema.verde} size="large" />
+					</View>
+				) : (
+					<Text style={estilo.rating}>
+						{ratingExibido}
+						{provisorio ? "?" : ""}
+					</Text>
+				)}
+			</View>
+
+			<View style={estilo.banner}>
+				<View style={estilo.bannerLicoesFundo}>
+					<MaterialCommunityIcons
+						name="school"
+						size={160}
+						color={tema.verde}
+						style={estilo.bannerLicoesIcone}
+					/>
+					<View style={estilo.bannerConteudo}>
+						<View>
+							<Text style={estilo.bannerTitulo}>Aprenda xadrez</Text>
+							<Text style={estilo.bannerSubtitulo}>
+								Domine táticas e aberturas em lições passo a passo.
+							</Text>
+						</View>
+						<Pressable
+							style={estilos.botaoEntrar}
+							onPress={() => {
+								router.replace("/(tabs)/aprender");
+							}}
+						>
+							<Text style={estilos.textoBotaoEntrar}>Começar lições</Text>
+						</Pressable>
+					</View>
+				</View>
+			</View>
+		</ScrollView>
+	);
+}
 
 const estilo = StyleSheet.create({
 	banner: {
 		borderRadius: 16,
 		overflow: "hidden",
 		margin: 16,
-		display: "flex",
 		flexDirection: "column",
 		height: 300,
 		borderWidth: 4,
 		borderColor: tema.surfaceAlt,
 	},
-
+	bannerLicoesFundo: {
+		flex: 1,
+		backgroundColor: tema.surface,
+	},
+	bannerLicoesIcone: {
+		position: "absolute",
+		right: -20,
+		bottom: -20,
+		opacity: 0.15,
+	},
 	cartao: {
 		borderRadius: 16,
 		margin: 16,
 		padding: 16,
 		alignItems: "center",
-		display: "flex",
 		flexDirection: "column",
 		backgroundColor: tema.surface,
 	},
@@ -41,29 +149,19 @@ const estilo = StyleSheet.create({
 		flex: 1,
 		padding: 20,
 		justifyContent: "space-between",
-		backgroundColor: "rgba(0,0,0,0.4)", // escurece a imagem para o texto ficar legível
+		backgroundColor: "rgba(0,0,0,0.4)",
 	},
-	botao: {
-		borderRadius: 16,
-		backgroundColor: tema.verde,
-		height: 52,
-		padding: 16,
-		margin: "auto",
-	},
-
 	bannerTitulo: {
 		color: tema.textoPrimario,
 		fontSize: 36,
 		marginBottom: 32,
 		fontWeight: "700",
 	},
-
 	bannerSubtitulo: {
 		color: tema.textoPrimario,
 		fontSize: 16,
 		fontWeight: "500",
 	},
-
 	rating: {
 		color: tema.verde,
 		padding: 4,
@@ -76,91 +174,8 @@ const estilo = StyleSheet.create({
 		letterSpacing: 2,
 		fontWeight: "100",
 	},
-	ratingMelhoria: {
-		fontSize: 14,
-		color: tema.verde,
+	ratingLoader: {
+		height: 88,
+		justifyContent: "center",
 	},
 });
-
-const listPartidasAnteriores: PropsParidasAnteriores[] = [
-	{ nome: "Magnus Carlsen", elo: 2840, status: "V", ativo: true },
-	{ nome: "Levy Rozman", elo: 2318, status: "D", ativo: false },
-	{ nome: "Felipe Brostolin Ribeiro", elo: 700, status: "E", ativo: false },
-	{ nome: "Walter White", elo: 3600, status: "D", ativo: true },
-];
-
-export default function TelaInicio() {
-	const { width } = useWindowDimensions();
-	return (
-		<ScrollView style={{ gap: 16 }}>
-			<ImageBackground
-				source={require("../../assets/images/jogar_agora.webp")}
-				style={estilo.banner}
-				imageStyle={{ borderRadius: 16 }}
-			>
-				<View style={estilo.bannerConteudo}>
-					<View>
-						<Text style={estilo.bannerTitulo}>O tabuleiro te espera</Text>
-						<Text style={estilo.bannerSubtitulo}>
-							Jogue uma partida de xadrez para melhorar suas habilidades táticas
-							no xadrez.
-						</Text>
-					</View>
-					<Pressable
-						style={estilos.botaoEntrar}
-						onPress={() => {
-							router.replace("/(tabs)/jogar");
-						}}
-					>
-						<Text style={estilos.textoBotaoEntrar}>Jogar agora</Text>
-					</Pressable>
-				</View>
-			</ImageBackground>
-			<View style={estilo.cartao}>
-				<Text style={estilo.ratingTexto}>Rating atual</Text>
-				<Text style={estilo.rating}>2148</Text>
-				<View
-					style={{
-						flexDirection: "row",
-						justifyContent: "center",
-						gap: 8,
-						alignItems: "center",
-					}}
-				>
-					<MaterialCommunityIcons
-						name="trending-up"
-						size={32}
-						color={tema.verde}
-					></MaterialCommunityIcons>
-					<Text style={estilo.ratingMelhoria}>+12 desde a semana passada</Text>
-				</View>
-			</View>
-
-			<View style={[estilo.cartao, { alignItems: "flex-start" }]}>
-				<View
-					style={{
-						alignItems: "flex-start",
-					}}
-				>
-					<Text style={[estilo.bannerTitulo, { marginLeft: 32 }]}>
-						Quebra-cabeça diário
-					</Text>
-					<Text style={[estilo.bannerSubtitulo, { marginLeft: 32 }]}>
-						Mate em 3
-					</Text>
-				</View>
-				<View style={{ alignSelf: "center" }}>
-					<Chessboard
-						boardSize={width - 128}
-						gestureEnabled={false}
-						colors={{
-							black: tema.textoMudo,
-							white: tema.textoPrimario,
-							lastMoveHighlight: "rgba(74, 222, 128, 0.3)",
-						}}
-					/>
-				</View>
-			</View>
-		</ScrollView>
-	);
-}

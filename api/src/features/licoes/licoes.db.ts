@@ -132,11 +132,28 @@ export const licoesDb = {
 		};
 	},
 
-	async concluirLicao(usuarioId: string, licaoId: string): Promise<void> {
-		await sql`
-      INSERT INTO progresso_licoes (usuario_id, licao_id)
-      VALUES (${usuarioId}, ${licaoId})
-      ON CONFLICT (usuario_id, licao_id) DO NOTHING
-    `;
+	async concluirLicao(usuarioId: string, licaoId: string): Promise<number> {
+		return await sql.begin(async (tx: typeof sql) => {
+			const inseridos = await tx<{ id: string }[]>`
+        INSERT INTO progresso_licoes (usuario_id, licao_id)
+        VALUES (${usuarioId}, ${licaoId})
+        ON CONFLICT (usuario_id, licao_id) DO NOTHING
+        RETURNING id
+      `;
+			if (inseridos.length === 0) {
+				return 0;
+			}
+
+			const licoes = await tx<{ xp_recompensa: number }[]>`
+        SELECT xp_recompensa FROM licoes WHERE id = ${licaoId}
+      `;
+			const recompensa = licoes[0]?.xp_recompensa ?? 0;
+			if (recompensa > 0) {
+				await tx`
+          UPDATE usuarios SET xp = xp + ${recompensa} WHERE id = ${usuarioId}
+        `;
+			}
+			return recompensa;
+		});
 	},
 };

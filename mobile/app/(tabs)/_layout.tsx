@@ -76,15 +76,11 @@ export default function LayoutTabs() {
 					}}
 				/>
 				<Tabs.Screen
-					name="jogar"
+					name="puzzles"
 					options={{
-						title: "Jogar",
+						title: "Puzzles",
 						tabBarIcon: ({ color, size }) => (
-							<MaterialCommunityIcons
-								name="chess-knight"
-								size={size}
-								color={color}
-							/>
+							<MaterialCommunityIcons name="puzzle" size={size} color={color} />
 						),
 					}}
 				/>

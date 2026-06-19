@@ -33,10 +33,12 @@ export const licoesController = {
 			if (!req.usuario) {
 				return res.status(401).json({ mensagem: "Não autenticado" });
 			}
-			await db.concluirLicao(req.usuario.id, req.params.id);
-			return res
-				.status(200)
-				.json({ mensagem: "Lição concluída", licaoId: req.params.id });
+			const xpGanho = await db.concluirLicao(req.usuario.id, req.params.id);
+			return res.status(200).json({
+				mensagem: "Lição concluída",
+				licaoId: req.params.id,
+				xpGanho,
+			});
 		} catch (erro) {
 			console.error("Erro ao concluir lição:", erro);
 			return res.status(500).json({ mensagem: "Erro interno do servidor" });

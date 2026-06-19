@@ -1,283 +1,328 @@
+import tema from "@/src/constantes/tema";
 import { useAutenticacao } from "@/src/contextos/AutenticacaoContext";
+import type { Perfil } from "@/src/model/Perfil";
+import type { TentativaPuzzle } from "@/src/model/Puzzle";
+import servicoAPI from "@/src/servicos/api";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import tema from "../../src/constantes/tema";
+import { useFocusEffect } from "@react-navigation/native";
+import { useCallback, useState } from "react";
+import {
+	ActivityIndicator,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 
-const estilo = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: tema.bg,
-  },
-  headerPerfil: {
-    padding: 20,
-    alignItems: "flex-start",
-  },
-  rankTexto: {
-    color: tema.verde,
-    fontSize: 12,
-    fontWeight: "bold",
-    letterSpacing: 1,
-  },
-  nomeUsuario: {
-    color: tema.textoPrimario,
-    fontSize: 32,
-    fontWeight: "bold",
-    marginVertical: 4,
-  },
-  linhaInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 15,
-  },
-  badgeElo: {
-    flexDirection: "row",
-    backgroundColor: "#1e2330",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 6,
-    alignItems: "center",
-    gap: 5,
-  },
-  textoElo: {
-    color: tema.textoPrimario,
-    fontWeight: "bold",
-  },
-  textoMudo: {
-    color: tema.textoMudo,
-    fontSize: 14,
-  },
-  cartaoStatus: {
-    backgroundColor: tema.surfaceAlt,
-    margin: 20,
-    padding: 20,
-    borderRadius: 15,
-  },
-  tituloSessao: {
-    color: tema.textoMudo,
-    fontSize: 12,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  rowEstatisticas: {
-    flexDirection: "row",
-    alignItems: "baseline",
-    gap: 10,
-  },
-  porcentagemGrande: {
-    color: tema.textoPrimario,
-    fontSize: 48,
-    fontWeight: "bold",
-  },
-  tendencia: {
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-  barraProgressoContainer: {
-    flexDirection: "row",
-    height: 10,
-    borderRadius: 5,
-    overflow: "hidden",
-    marginTop: 20,
-  },
-  barraParte: {
-    height: "100%",
-  },
-  sessaoConquistas: {
-    paddingLeft: 20,
-    marginBottom: 20,
-  },
-  cardConquista: {
-    backgroundColor: tema.surfaceAlt,
-    width: 100,
-    height: 100,
-    borderRadius: 15,
-    justifyContent: "center",
-    alignItems: "center",
-    marginRight: 15,
-    padding: 10,
-  },
-  textoConquista: {
-    color: tema.textoPrimario,
-    fontSize: 10,
-    textAlign: "center",
-    marginTop: 8,
-  },
-  sessaoPartidas: {
-    padding: 20,
-  },
-  itemPartida: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: tema.surfaceAlt,
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: tema.verde,
-  },
-  itemPartidaDerrota: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: tema.surfaceAlt,
-    padding: 15,
-    borderRadius: 12,
-    marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: tema.vermelho,
-  },
-  avatarOponente: {
-    width: 40,
-    height: 40,
-    backgroundColor: "#2a2f3e",
-    borderRadius: 8,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  nomeOponente: {
-    color: tema.textoPrimario,
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  detalhePartida: {
-    color: tema.textoMudo,
-    fontSize: 12,
-  },
-  resultadoPartida: {
-    fontWeight: "bold",
-    fontSize: 16,
-  },
-  eloGanho: {
-    color: tema.textoMudo,
-    fontSize: 12,
-  },
-  botaoHistorico: {
-    alignItems: "center",
-    padding: 20,
-    marginBottom: 40,
-  },
-  textoBotaoHistorico: {
-    color: tema.verde,
-    fontWeight: "bold",
-    letterSpacing: 1,
-  },
-});
+const LIMITE_RD_PROVISORIO = 110;
 
-function formatarDataDeEntrada(rawDate?: string | number | null) {
-  if (!rawDate) return "Entrou recentemente";
-  const date = new Date(String(rawDate));
-  if (isNaN(date.getTime())) return "Data de entrada desconhecida";
+const meses = [
+	"janeiro",
+	"fevereiro",
+	"março",
+	"abril",
+	"maio",
+	"junho",
+	"julho",
+	"agosto",
+	"setembro",
+	"outubro",
+	"novembro",
+	"dezembro",
+];
 
-  const months = [
-    "janeiro",
-    "fevereiro",
-    "março",
-    "abril",
-    "maio",
-    "junho",
-    "julho",
-    "agosto",
-    "setembro",
-    "outubro",
-    "novembro",
-    "dezembro",
-  ];
+function formatarDataDeEntrada(rawDate?: string | null) {
+	if (!rawDate) {
+		return "Entrou recentemente";
+	}
+	const date = new Date(rawDate);
+	if (Number.isNaN(date.getTime())) {
+		return "Data de entrada desconhecida";
+	}
+	const mes = meses[date.getMonth()];
+	const mesCapitalizado = mes.charAt(0).toUpperCase() + mes.slice(1);
+	return `Entrou em ${mesCapitalizado} de ${date.getFullYear()}`;
+}
 
-  const month = months[date.getMonth()];
-  const monthCapitalized = month.charAt(0).toUpperCase() + month.slice(1);
+function formatarDataRelativa(iso: string): string {
+	const data = new Date(iso);
+	if (Number.isNaN(data.getTime())) {
+		return "";
+	}
+	const diffMs = Date.now() - data.getTime();
+	const diffMin = Math.floor(diffMs / 60000);
+	if (diffMin < 1) {
+		return "agora";
+	}
+	if (diffMin < 60) {
+		return `há ${diffMin} min`;
+	}
+	const diffH = Math.floor(diffMin / 60);
+	if (diffH < 24) {
+		return `há ${diffH}h`;
+	}
+	const diffD = Math.floor(diffH / 24);
+	if (diffD < 30) {
+		return `há ${diffD}d`;
+	}
+	return data.toLocaleDateString("pt-BR");
+}
 
-  return `Entrou em ${monthCapitalized} de ${date.getFullYear()}`;
+function ItemTentativa({ tentativa }: { tentativa: TentativaPuzzle }) {
+	const sucesso = tentativa.resolveuPrimeira;
+	const delta = Math.round(tentativa.deltaRating);
+	return (
+		<View
+			style={[
+				estilo.itemTentativa,
+				sucesso ? estilo.itemBordaSucesso : estilo.itemBordaErro,
+			]}
+		>
+			<MaterialCommunityIcons
+				name={sucesso ? "check-circle" : "close-circle"}
+				size={24}
+				color={sucesso ? tema.verde : tema.vermelho}
+			/>
+			<View style={estilo.itemInfo}>
+				<Text style={estilo.itemTitulo}>Puzzle {tentativa.puzzleId}</Text>
+				<Text style={estilo.itemSubtitulo}>
+					{tentativa.tentativas}{" "}
+					{tentativa.tentativas === 1 ? "tentativa" : "tentativas"} ·{" "}
+					{formatarDataRelativa(tentativa.criadoEm)}
+				</Text>
+			</View>
+			<Text
+				style={[
+					estilo.itemDelta,
+					delta >= 0 ? estilo.deltaPositivo : estilo.deltaNegativo,
+				]}
+			>
+				{delta >= 0 ? "+" : ""}
+				{delta}
+			</Text>
+		</View>
+	);
 }
 
 export default function TelaPerfil() {
-  const { usuario, token, sair } = useAutenticacao();
-  const [localUsuario, setLocalUsuario] = useState(usuario);
-  const [loading, setLoading] = useState(false);
+	const { usuario, token } = useAutenticacao();
+	const [perfil, setPerfil] = useState<Perfil | null>(null);
+	const [carregando, setCarregando] = useState(true);
+	const [erro, setErro] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (usuario) {
-      setLocalUsuario(usuario);
-      return;
-    }
+	const carregar = useCallback(async () => {
+		if (!token) {
+			return;
+		}
+		setCarregando(true);
+		setErro(null);
+		try {
+			const dados = await servicoAPI.obterPerfil(token);
+			setPerfil(dados);
+		} catch (err) {
+			setErro(err instanceof Error ? err.message : "Erro ao carregar perfil");
+		} finally {
+			setCarregando(false);
+		}
+	}, [token]);
 
-    (async () => {
-      setLoading(true);
-      try {
-        const raw = await AsyncStorage.getItem("usuario_auth");
-        if (raw) setLocalUsuario(JSON.parse(raw));
-      } catch (erro) {
-        console.error("Erro ao carregar usuário:", erro);
-      } finally {
-        setLoading(false);
-      }
-    })();
-  }, [usuario]);
+	useFocusEffect(
+		useCallback(() => {
+			void carregar();
+		}, [carregar]),
+	);
 
-  return (
-    <View style={estilo.root} edges={["top"]}>
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <View style={estilo.headerPerfil}>
-          <Text style={estilo.nomeUsuario}>{localUsuario?.nome}</Text>
-          <View style={estilo.linhaInfo}>
-            <View style={estilo.badgeElo}>
-              <MaterialCommunityIcons
-                name="star"
-                size={14}
-                color={tema.verde}
-              />
-              <Text style={estilo.textoElo}>{localUsuario?.elo} 500 Elo</Text>
-            </View>
-            <Text style={estilo.textoMudo}>
-              {formatarDataDeEntrada(localUsuario?.criadoEm)}
-            </Text>
-          </View>
-        </View>
+	if (carregando) {
+		return (
+			<View style={estilo.centralizado}>
+				<ActivityIndicator color={tema.verde} />
+			</View>
+		);
+	}
 
+	if (erro || !perfil) {
+		return (
+			<View style={estilo.centralizado}>
+				<Text style={estilo.erroTexto}>{erro ?? "Perfil indisponível"}</Text>
+			</View>
+		);
+	}
 
-        <View style={estilo.sessaoConquistas}>
-          <Text style={estilo.tituloSessao}>CONQUISTAS</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <View style={estilo.cardConquista}>
-              <MaterialCommunityIcons
-                name="trophy"
-                size={30}
-                color={tema.verde}
-              />
-              <Text style={estilo.textoConquista}>Vitória Rápida</Text>
-            </View>
+	const ratingExibido = Math.round(perfil.rating);
+	const provisorio = perfil.rd > LIMITE_RD_PROVISORIO;
+	const nome = perfil.nome ?? usuario?.nome ?? "Jogador";
 
-            <View style={estilo.cardConquista}>
-              <MaterialCommunityIcons
-                name="lightning-bolt"
-                size={30}
-                color={tema.verde}
-              />
-              <Text style={estilo.textoConquista}>Tático</Text>
-            </View>
+	return (
+		<View style={estilo.root}>
+			<ScrollView showsVerticalScrollIndicator={false}>
+				<View style={estilo.header}>
+					<Text style={estilo.nomeUsuario}>{nome}</Text>
+					<Text style={estilo.textoMudo}>
+						{formatarDataDeEntrada(perfil.criadoEm)}
+					</Text>
+					<View style={estilo.badges}>
+						<View style={estilo.badgeRating}>
+							<MaterialCommunityIcons
+								name="puzzle"
+								size={16}
+								color={tema.verde}
+							/>
+							<Text style={estilo.badgeRatingTexto}>
+								{ratingExibido}
+								{provisorio ? "?" : ""}
+							</Text>
+						</View>
+						<View style={estilo.badgeXp}>
+							<MaterialCommunityIcons
+								name="star-four-points"
+								size={14}
+								color="#0d1117"
+							/>
+							<Text style={estilo.badgeXpTexto}>{perfil.xp} XP</Text>
+						</View>
+					</View>
+					{provisorio && (
+						<Text style={estilo.textoMudo}>
+							Rating provisório — resolva mais puzzles pra estabilizar
+						</Text>
+					)}
+				</View>
 
-            <View style={estilo.cardConquista}>
-              <MaterialCommunityIcons
-                name="shield"
-                size={30}
-                color={tema.verde}
-              />
-              <Text style={estilo.textoConquista}>Defesa Sólida</Text>
-            </View>
-
-            <View style={estilo.cardConquista}>
-              <MaterialCommunityIcons
-                name="chess-king"
-                size={30}
-                color={tema.verde}
-              />
-              <Text style={estilo.textoConquista}>Full House</Text>
-            </View>
-          </ScrollView>
-        </View>
-
-      
-      </ScrollView>
-    </View>
-  );
+				<View style={estilo.secao}>
+					<Text style={estilo.tituloSecao}>HISTÓRICO DE PUZZLES</Text>
+					{perfil.tentativasRecentes.length === 0 ? (
+						<Text style={estilo.textoVazio}>Nenhum puzzle resolvido ainda</Text>
+					) : (
+						perfil.tentativasRecentes.map((t) => (
+							<ItemTentativa
+								key={`${t.puzzleId}-${t.criadoEm}`}
+								tentativa={t}
+							/>
+						))
+					)}
+				</View>
+			</ScrollView>
+		</View>
+	);
 }
+
+const estilo = StyleSheet.create({
+	root: {
+		flex: 1,
+		backgroundColor: tema.bg,
+	},
+	centralizado: {
+		flex: 1,
+		backgroundColor: tema.bg,
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 24,
+	},
+	header: {
+		padding: 20,
+		gap: 8,
+	},
+	nomeUsuario: {
+		color: tema.textoPrimario,
+		fontSize: 28,
+		fontWeight: "800",
+	},
+	textoMudo: {
+		color: tema.textoMudo,
+		fontSize: 13,
+	},
+	badges: {
+		flexDirection: "row",
+		gap: 10,
+		marginTop: 6,
+	},
+	badgeRating: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		backgroundColor: tema.surfaceAlt,
+		paddingHorizontal: 10,
+		paddingVertical: 6,
+		borderRadius: 8,
+	},
+	badgeRatingTexto: {
+		color: tema.textoPrimario,
+		fontWeight: "700",
+		fontSize: 14,
+	},
+	badgeXp: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 6,
+		backgroundColor: tema.verde,
+		paddingHorizontal: 12,
+		paddingVertical: 6,
+		borderRadius: 8,
+	},
+	badgeXpTexto: {
+		color: "#0d1117",
+		fontWeight: "800",
+		fontSize: 13,
+	},
+	secao: {
+		paddingHorizontal: 20,
+		paddingBottom: 40,
+		gap: 8,
+	},
+	tituloSecao: {
+		color: tema.textoMudo,
+		fontSize: 12,
+		fontWeight: "700",
+		letterSpacing: 1,
+		marginBottom: 6,
+	},
+	textoVazio: {
+		color: tema.textoMudo,
+		fontSize: 14,
+		textAlign: "center",
+		padding: 20,
+	},
+	itemTentativa: {
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 12,
+		backgroundColor: tema.surfaceAlt,
+		padding: 12,
+		borderRadius: 10,
+		borderLeftWidth: 4,
+	},
+	itemBordaSucesso: {
+		borderLeftColor: tema.verde,
+	},
+	itemBordaErro: {
+		borderLeftColor: tema.vermelho,
+	},
+	itemInfo: {
+		flex: 1,
+		gap: 2,
+	},
+	itemTitulo: {
+		color: tema.textoPrimario,
+		fontWeight: "600",
+		fontSize: 14,
+	},
+	itemSubtitulo: {
+		color: tema.textoMudo,
+		fontSize: 12,
+	},
+	itemDelta: {
+		fontSize: 16,
+		fontWeight: "800",
+		fontVariant: ["tabular-nums"],
+	},
+	deltaPositivo: {
+		color: tema.verde,
+	},
+	deltaNegativo: {
+		color: tema.vermelho,
+	},
+	erroTexto: {
+		color: tema.vermelho,
+		textAlign: "center",
+	},
+});

@@ -17,7 +17,7 @@ import type { Move } from "chess.js";
 import BadgeClassificacao from "@/src/componentes/analise/BadgeClassificacao";
 import BarraAvaliacao from "@/src/componentes/analise/BarraAvaliacao";
 import BarraSugestoes from "@/src/componentes/analise/BarraSugestoes";
-import tema from "@/src/constantes/tema";
+import tema, { coresTabuleiro } from "@/src/constantes/tema";
 import type { AnaliseChessApi, ModoAnalise } from "@/src/model/Analise";
 import { analisarPosicao } from "@/src/servicos/chessApi";
 import {
@@ -407,11 +407,7 @@ export default function TelaAnalise() {
 					boardSize={tamTabuleiro}
 					fen={fen}
 					onMove={aoMover}
-					colors={{
-						black: tema.textoMudo,
-						white: tema.textoPrimario,
-						lastMoveHighlight: "rgba(74, 222, 128, 0.3)",
-					}}
+					colors={coresTabuleiro}
 				/>
 				<View style={estilos.barraNavegacao}>
 					<Pressable
